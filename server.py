@@ -22,3 +22,4 @@ if __name__ == "__main__":
     print(f"[API] Gold Rate API:   http://localhost:{port}/api/gold-rates")
     print(f"[DB]  Database:        {DB_PATH}\n")
     app.run(host="0.0.0.0", port=port, debug=False)
+ 
