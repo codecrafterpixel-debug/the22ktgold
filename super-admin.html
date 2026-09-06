@@ -88,6 +88,11 @@
         .level-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; padding: 0.2rem 0.5rem; background: rgba(122,100,255,0.1); border: 1px solid var(--border); color: var(--accent2); }
         .level-tag.gold-tag { background: rgba(197,154,63,0.1); border-color: rgba(197,154,63,0.25); color: var(--gold); }
     </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 </head>
 <body>
     <div class="super-wrap">
@@ -162,15 +167,16 @@
             btn.disabled    = true;
             errorMsg.style.display = 'none';
 
+            // 1. Try Backend API first if available
             try {
                 const res  = await fetch(API_BASE + '/api/admin/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await res.json();
 
                 if (res.ok) {
+                    const data = await res.json();
                     if (data.admin.role !== 'SUPER_ADMIN') {
                         errorMsg.textContent   = '⚠ This console requires Super Admin access. Use the regular Admin Login instead.';
                         errorMsg.style.display = 'block';
@@ -183,19 +189,36 @@
                     localStorage.setItem('adminName',  data.admin.name);
                     localStorage.setItem('adminEmail', data.admin.email);
                     window.location.href = 'admin-dashboard.html';
-                } else {
+                    return;
+                } else if (res.status === 401 || res.status === 400) {
+                    const data = await res.json().catch(() => ({}));
                     errorMsg.textContent   = '⚠ ' + (data.error || 'Authentication failed. This attempt has been logged.');
                     errorMsg.style.display = 'block';
                     document.getElementById('superPass').value = '';
                     btn.textContent = 'AUTHENTICATE & ENTER →';
                     btn.disabled    = false;
+                    return;
                 }
             } catch (err) {
-                errorMsg.textContent   = '⚠ Server error. Please try again.';
-                errorMsg.style.display = 'block';
-                btn.textContent = 'AUTHENTICATE & ENTER →';
-                btn.disabled    = false;
+                // Backend server is offline or running standalone
             }
+
+            // 2. Direct Standalone Super Admin Authentication (Works without server.py)
+            const cleanEmail = email.toLowerCase();
+            if (cleanEmail === '22ktgold@yashpanchal.com' && password === 'Yash2112') {
+                localStorage.setItem('adminToken', 'standalone_' + Date.now());
+                localStorage.setItem('adminRole',  'SUPER_ADMIN');
+                localStorage.setItem('adminName',  'Yash Panchal');
+                localStorage.setItem('adminEmail', email);
+                window.location.href = 'admin-dashboard.html';
+                return;
+            }
+
+            errorMsg.textContent = '⚠ Authentication failed. Invalid Super Admin Developer ID or Master Key.';
+            errorMsg.style.display = 'block';
+            document.getElementById('superPass').value = '';
+            btn.textContent = 'AUTHENTICATE & ENTER →';
+            btn.disabled    = false;
         }
 
         function toggleSuperPwd() {
