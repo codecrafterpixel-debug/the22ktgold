@@ -93,6 +93,11 @@
         }
         .superadmin-link a { color: var(--muted); text-decoration: underline; }
     </style>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 </head>
 <body>
     <div class="admin-wrap">
@@ -161,33 +166,57 @@
             btn.disabled    = true;
             errorMsg.style.display = 'none';
 
+            // 1. Try Backend API first if available
             try {
-                const res  = await fetch(API_BASE + '/api/admin/auth/login', {
+                const res = await fetch(API_BASE + '/api/admin/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await res.json();
-
                 if (res.ok) {
+                    const data = await res.json();
                     localStorage.setItem('adminToken', data.token);
                     localStorage.setItem('adminRole',  data.admin.role);
                     localStorage.setItem('adminName',  data.admin.name);
                     localStorage.setItem('adminEmail', data.admin.email);
                     window.location.href = 'admin-dashboard.html';
-                } else {
+                    return;
+                } else if (res.status === 401 || res.status === 400) {
+                    const data = await res.json().catch(() => ({}));
                     errorMsg.textContent   = '⚠ ' + (data.error || 'Invalid credentials');
                     errorMsg.style.display = 'block';
                     document.getElementById('adminPass').value = '';
                     btn.textContent = 'Access Admin Panel →';
                     btn.disabled    = false;
+                    return;
                 }
             } catch (err) {
-                errorMsg.textContent   = '⚠ Server error. Make sure python server.py is running on http://localhost:3000.';
-                errorMsg.style.display = 'block';
-                btn.textContent = 'Access Admin Panel →';
-                btn.disabled    = false;
+                // Backend server is not running or running locally without server.py
             }
+
+            // 2. Direct Standalone Authentication (Works without server.py)
+            const cleanEmail = email.toLowerCase();
+            if (cleanEmail === '22ktgold@veershah.com' && password === 'Veer@2112') {
+                localStorage.setItem('adminToken', 'standalone_' + Date.now());
+                localStorage.setItem('adminRole',  'ADMIN');
+                localStorage.setItem('adminName',  'Veer Shah');
+                localStorage.setItem('adminEmail', email);
+                window.location.href = 'admin-dashboard.html';
+                return;
+            } else if (cleanEmail === '22ktgold@yashpanchal.com' && password === 'Yash2112') {
+                localStorage.setItem('adminToken', 'standalone_' + Date.now());
+                localStorage.setItem('adminRole',  'SUPER_ADMIN');
+                localStorage.setItem('adminName',  'Yash Panchal');
+                localStorage.setItem('adminEmail', email);
+                window.location.href = 'admin-dashboard.html';
+                return;
+            }
+
+            errorMsg.textContent   = '⚠ Invalid credentials. Please check your admin email and password.';
+            errorMsg.style.display = 'block';
+            document.getElementById('adminPass').value = '';
+            btn.textContent = 'Access Admin Panel →';
+            btn.disabled    = false;
         }
 
         function toggleAdminPwd() {
@@ -197,4 +226,3 @@
     </script>
 </body>
 </html>
- 
