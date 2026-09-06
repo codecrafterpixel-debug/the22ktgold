@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — THE 22KT GOLD</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C59A3F; --gold-light: #E8C97A;
+            --dark: #FAF8F5; --surface: #FFFFFF; --surface2: #F4E8D9;
+            --border: rgba(197,154,63,0.25); --text: #2C2A29; --muted: #5C5856;
+            --accent: #7A64FF; --green: #10B981; --orange: #F59E0B; --red: #EF4444;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--text); }
+
+        /* ── Remove number input scrollers / stepper arrows ── */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button,
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+        }
+        input[type=number] {
+            -moz-appearance: textfield !important;
+            appearance: textfield !important;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+            background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 100; overflow-y: auto;
+        }
+        .sidebar-logo { padding: 1.8rem 1.5rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .sidebar-logo .brand { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: #161413; letter-spacing: 2px; }
+        .sidebar-logo .brand span { color: var(--gold); }
+        .sidebar-logo .sub { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 0.2rem; }
+        .sidebar-role {
+            margin: 1rem 1.5rem; background: rgba(197,154,63,0.1); border: 1px solid var(--border);
+            padding: 0.4rem 0.8rem; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gold);
+        }
+        .sidebar-role.superadmin-role { background: rgba(122,100,255,0.1); border-color: rgba(122,100,255,0.25); color: #A78BFA; }
+        .nav-section { padding: 0.5rem 0; }
+        .nav-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); padding: 0.6rem 1.5rem 0.3rem; }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.5rem; cursor: pointer;
+            font-size: 0.85rem; color: var(--muted); transition: background 0.15s, color 0.15s;
+            border-left: 3px solid transparent; text-decoration: none;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(197,154,63,0.06); color: var(--text); border-left-color: var(--gold); }
+        .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+        .sidebar-bottom { margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--border); flex-shrink: 0; }
+        .logout-btn {
+            width: 100%; padding: 0.65rem; background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.25); color: var(--red);
+            font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+        }
+        .logout-btn:hover { background: rgba(248,113,113,0.2); }
+
+        /* ── Main ── */
+        .main { margin-left: 240px; min-height: 100vh; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.2rem 2rem; background: var(--surface); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .topbar-left { display: flex; flex-direction: column; gap: 0.2rem; }
+        .topbar-title { font-size: 1.1rem; font-weight: 700; color: #161413; }
+        .breadcrumb { font-size: 0.72rem; color: var(--muted); }
+        .topbar-right { display: flex; align-items: center; gap: 1rem; }
+        .profile-btn {
+            display: flex; align-items: center; gap: 0.6rem; cursor: pointer; position: relative;
+            background: none; border: none; font-family: 'DM Sans', sans-serif; color: var(--text);
+        }
+        .admin-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff;
+        }
+        .profile-dropdown {
+            position: absolute; top: calc(100% + 0.5rem); right: 0; width: 180px;
+            background: var(--surface); border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            display: none; z-index: 200;
+        }
+        .profile-dropdown.open { display: block; }
+        .profile-dropdown a {
+            display: block; padding: 0.7rem 1rem; font-size: 0.8rem; color: var(--text);
+            text-decoration: none; border-bottom: 1px solid var(--border); cursor: pointer;
+        }
+        .profile-dropdown a:last-child { border-bottom: none; }
+        .profile-dropdown a:hover { background: rgba(197,154,63,0.06); }
+
+        .page { padding: 2rem; }
+
+        /* ── Cards ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.2rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; position: relative; overflow: hidden; }
+        .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold-light)); }
+        .stat-icon { font-size: 1.8rem; margin-bottom: 0.8rem; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #161413; margin-bottom: 0.2rem; }
+        .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .stat-change { font-size: 0.75rem; margin-top: 0.5rem; }
+        .stat-change.up { color: var(--green); } .stat-change.down { color: var(--red); }
+
+        .section-card { background: var(--surface); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .section-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.8rem;
+        }
+        .section-head h3 { font-size: 0.9rem; font-weight: 600; color: #161413; }
+        .section-head-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+        /* ── Buttons ── */
+        .btn-small {
+            padding: 0.4rem 0.9rem; background: rgba(197,154,63,0.1); border: 1px solid var(--border);
+            color: var(--gold); font-size: 0.72rem; font-weight: 600; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 0.5px; font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+        }
+        .btn-small:hover { background: rgba(197,154,63,0.2); }
+        .btn-primary { padding: 0.6rem 1.2rem; background: var(--gold); color: #fff; border: none; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s; }
+        .btn-primary:hover { opacity: 0.88; }
+        .btn-danger { padding: 0.35rem 0.7rem; background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.3); font-size: 0.7rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .btn-danger:hover { background: rgba(248,113,113,0.2); }
+        .btn-secondary { padding: 0.35rem 0.7rem; background: rgba(0,0,0,0.05); color: var(--text); border: 1px solid rgba(0,0,0,0.1); font-size: 0.7rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .btn-secondary:hover { background: rgba(0,0,0,0.08); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ── Tables ── */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 0.8rem 1.5rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 0.9rem 1.5rem; font-size: 0.85rem; border-bottom: 1px solid rgba(0,0,0,0.06); color: var(--text); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(0,0,0,0.02); }
+        .product-img-preview { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+
+        /* ── Badges ── */
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-green { background: rgba(74,222,128,0.12); color: var(--green); }
+        .badge-orange { background: rgba(251,146,60,0.12); color: var(--orange); }
+        .badge-red { background: rgba(248,113,113,0.12); color: var(--red); }
+        .badge-purple { background: rgba(122,100,255,0.12); color: #A78BFA; }
+        .badge-blue { background: rgba(59,130,246,0.12); color: #3B82F6; }
+        .badge-gray { background: rgba(0,0,0,0.06); color: var(--muted); }
+
+        /* ── Gold banner ── */
+        .gold-banner {
+            background: linear-gradient(135deg,rgba(197,154,63,0.1),rgba(232,201,122,0.05));
+            border: 1px solid var(--border); padding: 1.2rem 1.5rem;
+            display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;
+        }
+        .gold-banner-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .gold-banner-value { font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+        .gold-banner-divider { width: 1px; height: 36px; background: var(--border); }
+
+        /* ── Forms ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.5rem; }
+        .form-grid.single { grid-template-columns: 1fr; }
+        .form-group label { display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.5px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.75rem; background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; font-size: 0.88rem;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); }
+        .form-group.span2 { grid-column: span 2; }
+        .form-actions { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.8rem; }
+
+        /* ── Search / filter bar ── */
+        .filter-bar { display: flex; gap: 0.7rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .filter-bar input, .filter-bar select {
+            padding: 0.5rem 0.8rem; border: 1px solid rgba(0,0,0,0.12); background: #fff;
+            font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--text); outline: none;
+        }
+        .filter-bar input:focus, .filter-bar select:focus { border-color: var(--gold); }
+        .filter-bar input { flex: 1; min-width: 180px; }
+
+        /* ── Pagination ── */
+        .pagination { display: flex; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; justify-content: flex-end; border-top: 1px solid var(--border); }
+        .pagination button { padding: 0.3rem 0.7rem; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 0.78rem; font-family: 'DM Sans', sans-serif; }
+        .pagination button.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination-info { font-size: 0.75rem; color: var(--muted); }
+
+        /* ── States ── */
+        .state-loading, .state-empty, .state-error {
+            text-align: center; padding: 3rem 2rem; color: var(--muted);
+        }
+        .state-loading::before { content: '⟳ '; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .state-error { color: var(--red); }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500;
+            display: flex; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border);
+            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1;
+        }
+        .modal-head h3 { font-size: 1rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+        .modal-close:hover { color: var(--text); }
+
+        /* ── Notification toast ── */
+        .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast {
+            padding: 0.8rem 1.2rem; min-width: 240px; max-width: 360px;
+            border: 1px solid; font-size: 0.82rem; font-weight: 500; animation: slideIn 0.25s ease;
+        }
+        .toast.success { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.4); color: #059669; }
+        .toast.error   { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.4); color: var(--red); }
+        .toast.info    { background: rgba(197,154,63,0.1);  border-color: var(--border); color: #92610a; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* ── Confirm dialog ── */
+        .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 600; display: flex; align-items: center; justify-content: center; }
+        .confirm-overlay.hidden { display: none; }
+        .confirm-box { background: var(--surface); border: 1px solid var(--border); padding: 2rem; max-width: 400px; width: 100%; }
+        .confirm-box h4 { font-size: 1rem; margin-bottom: 0.8rem; }
+        .confirm-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+        .confirm-actions { display: flex; gap: 0.8rem; justify-content: flex-end; }
+
+        /* ── SA only ── */
+        .sa-only { display: none; }
+        .sa-only.visible { display: block; }
+        .sa-nav-only { display: none; }
+        .sa-nav-only.visible { display: flex; }
+
+        /* ── Gold rates page ── */
+        .gold-rate-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; margin-bottom: 2rem; }
+        .gold-rate-card { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; position: relative; }
+        .gold-rate-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold-light)); }
+        .rate-purity { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+        .rate-value { font-size: 2rem; font-weight: 700; color: var(--gold); }
+        .rate-unit { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+        .rate-change { font-size: 0.8rem; margin-top: 0.5rem; }
+        .rate-up { color: var(--green); } .rate-down { color: var(--red); }
+        .rate-source { font-size: 0.68rem; color: var(--muted); margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+        .manual-badge { display: inline-block; background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.3); color: var(--orange); font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; margin-left: 0.5rem; text-transform: uppercase; }
+        .live-badge   { display: inline-block; background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); color: var(--green); font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; margin-left: 0.5rem; text-transform: uppercase; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .gold-rate-grid { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .menu-toggle { display: flex !important; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.span2 { grid-column: span 1; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .gold-rate-grid { grid-template-columns: 1fr; }
+        }
+        .menu-toggle { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text); }
+        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+        .mobile-overlay.show { display: block; }
+
+        /* Gallery grid */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; padding: 1.5rem; }
+        .gallery-item { position: relative; aspect-ratio: 1; background: var(--dark); border: 1px solid var(--border); overflow: hidden; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .gallery-item-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+        .gallery-item:hover .gallery-item-overlay { opacity: 1; }
+        .gallery-item-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7rem; padding: 0.4rem 0.6rem; }
+
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed var(--border); padding: 2.5rem; text-align: center;
+            cursor: pointer; transition: border-color 0.2s; color: var(--muted);
+        }
+        .upload-zone:hover { border-color: var(--gold); color: var(--text); }
+        .upload-zone input[type=file] { display: none; }
+        .upload-preview { max-width: 200px; max-height: 200px; margin-top: 1rem; object-fit: cover; border: 1px solid var(--border); display: none; }
+
+        .order-id { color: var(--gold); font-weight: 600; }
+        .truncate { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+
+<!-- Mobile sidebar overlay -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="brand">THE <span>22KT</span> GOLD</div>
+        <div class="sub">Admin Console</div>
+    </div>
+    <div class="sidebar-role" id="roleTag">ADMIN</div>
+
+    <nav>
+        <div class="nav-section">
+            <div class="nav-label">Overview</div>
+            <div class="nav-item" id="nav-dashboard" onclick="navigate('dashboard')"><span class="icon">📊</span> Dashboard</div>
+            <div class="nav-item" id="nav-orders"    onclick="navigate('orders')">   <span class="icon">📦</span> Orders</div>
+            <div class="nav-item" id="nav-users"     onclick="navigate('users')">    <span class="icon">👥</span> Users</div>
+        </div>
+        <div class="nav-section">
+            <div class="nav-label">Catalogue</div>
+            <div class="nav-item" id="nav-products"   onclick="navigate('products')">   <span class="icon">💍</span> Products</div>
+            <div class="nav-item" id="nav-categories" onclick="navigate('categories')"> <span class="icon">🏷️</span> Categories</div>
+            <div class="nav-item" id="nav-gallery"    onclick="navigate('gallery')">    <span class="icon">🖼️</span> Gallery</div>
+        </div>
+        <div class="nav-section">
+            <div class="nav-label">Business</div>
+            <div class="nav-item" id="nav-gold-rates"    onclick="navigate('gold-rates')">   <span class="icon">📈</span> Gold Rates</div>
+            <div class="nav-item" id="nav-enquiries"     onclick="navigate('enquiries')">     <span class="icon">💬</span> Enquiries</div>
+            <div class="nav-item" id="nav-custom-orders" onclick="navigate('custom-orders')"> <span class="icon">✏️</span> Custom Orders</div>
+        </div>
+        <!-- Super Admin Only -->
+        <div class="nav-section sa-only" id="saNav">
+            <div class="nav-label" style="color:#A78BFA;">Developer</div>
+            <div class="nav-item sa-nav-only" id="nav-admins"   onclick="navigate('admins')">   <span class="icon">🔐</span> Admin Accounts</div>
+            <div class="nav-item sa-nav-only" id="nav-settings" onclick="navigate('settings')"> <span class="icon">⚙️</span> Site Settings</div>
+            <div class="nav-item sa-nav-only" id="nav-logs"     onclick="navigate('logs')">     <span class="icon">📋</span> Access Logs</div>
+        </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <p style="font-size:0.7rem;color:var(--muted);margin-bottom:0.8rem;" id="adminEmailTag">—</p>
+        <button class="logout-btn" onclick="logoutAdmin()">🚪 Sign Out</button>
+    </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+    <div class="topbar">
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <button class="menu-toggle" onclick="openSidebar()">☰</button>
+            <div class="topbar-left">
+                <div class="topbar-title" id="pageTitle">Dashboard Overview</div>
+                <div class="breadcrumb" id="pageBreadcrumb">Home › Dashboard</div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <span style="font-size:0.75rem;color:var(--muted);" id="adminRoleDisplay">Admin</span>
+            <button class="profile-btn" onclick="toggleProfileDropdown()">
+                <div class="admin-avatar" id="adminAvatarLetter">A</div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a onclick="navigate('profile')">👤 View Profile</a>
+                    <a onclick="openChangePassword()">🔑 Change Password</a>
+                    <a onclick="logoutAdmin()" style="color:var(--red)">🚪 Sign Out</a>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <div class="page" id="pageContent">
+
+        <!-- ── DASHBOARD ── -->
+        <div id="page-dashboard" class="page-section">
+            <div class="gold-banner" id="dashGoldBanner">
+                <div><div class="gold-banner-label">22KT Live Rate (per gram)</div><div class="gold-banner-value" id="dashRate22">—</div></div>
+                <div class="gold-banner-divider"></div>
+                <div><div class="gold-banner-label">24KT Live Rate (per gram)</div><div class="gold-banner-value" id="dashRate24">—</div></div>
+                <div class="gold-banner-divider"></div>
+                <div><div class="gold-banner-label">Last Updated</div><div style="font-size:0.85rem;color:var(--text);" id="dashRateTime">—</div></div>
+                <div style="margin-left:auto;"><button class="btn-small" onclick="loadGoldRateBanner()">↻ Refresh</button></div>
+            </div>
+
+            <div class="stats-grid" id="dashStats">
+                <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="statOrders">—</div><div class="stat-label">Total Orders</div></div>
+                <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="statUsers">—</div><div class="stat-label">Registered Users</div></div>
+                <div class="stat-card"><div class="stat-icon">✏️</div><div class="stat-value" id="statCustom">—</div><div class="stat-label">Custom Requests</div></div>
+                <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-value" id="statEnquiries">—</div><div class="stat-label">Open Enquiries</div></div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-head">
+                    <h3>Recent Orders</h3>
+                    <button class="btn-small" onclick="navigate('orders')">View All</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Weight</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody id="dashRecentOrders"><tr><td colspan="6" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Super Admin: Admin Accounts preview -->
+            <div class="section-card sa-only" id="saAdminSection">
+                <div class="section-head">
+                    <h3 style="color:#A78BFA;">👑 Admin Account Management</h3>
+                    <button class="btn-small" style="color:#A78BFA;border-color:rgba(122,100,255,0.3);" onclick="navigate('admins')">Manage Admins</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Username</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="dashAdminsTable"><tr><td colspan="5" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ORDERS ── -->
+        <div id="page-orders" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>All Orders</h3></div>
+                <div class="filter-bar">
+                    <input type="text" id="ordersSearch" placeholder="Search order ID, customer…" oninput="debounce(loadOrders,400)()">
+                    <select id="ordersStatusFilter" onchange="loadOrders()">
+                        <option value="">All Statuses</option>
+                        <option>Pending Payment</option><option>Confirmed</option><option>Processing</option>
+                        <option>In Production</option><option>Ready</option><option>Shipped</option>
+                        <option>Delivered</option><option>Cancelled</option>
+                    </select>
+                    <select id="ordersPaymentFilter" onchange="loadOrders()">
+                        <option value="">All Payments</option>
+                        <option>Pending</option><option>Paid</option><option>Refunded</option><option>Failed</option>
+                    </select>
+                    <input type="date" id="ordersDateFrom" onchange="loadOrders()">
+                    <input type="date" id="ordersDateTo" onchange="loadOrders()">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Weight</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="ordersTableBody"><tr><td colspan="9" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="ordersPagination"></div>
+            </div>
+        </div>
+
+        <!-- ── USERS ── -->
+        <div id="page-users" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>Registered Users</h3></div>
+                <div class="filter-bar">
+                    <input type="text" id="usersSearch" placeholder="Search name, email, phone…" oninput="debounce(loadUsers,400)()">
+                    <select id="usersStatusFilter" onchange="loadUsers()">
+                        <option value="">All</option><option value="ACTIVE">Active</option><option value="DISABLED">Disabled</option>
+                    </select>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                        <tbody id="usersTableBody"><tr><td colspan="8" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="usersPagination"></div>
+            </div>
+        </div>
+
+        <!-- ── PRODUCTS ── -->
+        <div id="page-products" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head">
+                    <h3>Products Catalogue</h3>
+                    <button class="btn-small" onclick="openProductModal()">+ Add Product</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="prodsSearch" placeholder="Search products…" oninput="debounce(loadProducts,400)()">
+                    <select id="prodsCatFilter" onchange="loadProducts()"><option value="">All Categories</option></select>
+                    <select id="prodsActiveFilter" onchange="loadProducts()">
+                        <option value="">All</option><option value="1">Active</option><option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Weight</th><th>KT</th><th>SKU</th><th>Stock</th><th>Active</th><th>Actions</th></tr></thead>
+                        <tbody id="productsTableBody"><tr><td colspan="9" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="productsPagination"></div>
+            </div>
+        </div>
+
+        <!-- ── CATEGORIES ── -->
+        <div id="page-categories" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head">
+                    <h3>Categories</h3>
+                    <button class="btn-small" onclick="openCatModal()">+ Add Category</button>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="catsSearch" placeholder="Search categories…" oninput="debounce(loadCategories,400)()">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Slug</th><th>Products</th><th>Active</th><th>Created</th><th>Actions</th></tr></thead>
+                        <tbody id="categoriesTableBody"><tr><td colspan="6" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── GALLERY ── -->
+        <div id="page-gallery" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>Gallery Upload</h3></div>
+                <div style="padding:1.5rem;">
+                    <div class="upload-zone" onclick="document.getElementById('galleryFileInput').click()">
+                        <input type="file" id="galleryFileInput" accept="image/jpeg,image/png,image/webp" onchange="handleGalleryPreview()">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">📷</div>
+                        <div style="font-size:0.9rem;">Click to select image</div>
+                        <div style="font-size:0.72rem;margin-top:0.3rem;color:var(--muted);">JPG, PNG, WebP — max 8 MB</div>
+                        <img id="galleryUploadPreview" class="upload-preview">
+                    </div>
+                    <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Title *</label><input type="text" id="galleryTitle" placeholder="Image title"></div>
+                        <div class="form-group"><label>Category</label>
+                            <select id="galleryCategory">
+                                <option value="">Select category</option>
+                                <option>Rings</option><option>Necklaces</option><option>Bangles</option>
+                                <option>Earrings</option><option>Bridal Sets</option><option>Men's Gold</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Alt Text</label><input type="text" id="galleryAlt" placeholder="Describe the image"></div>
+                        <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
+                            <input type="checkbox" id="galleryFeatured" style="width:auto;"> <label style="text-transform:none;font-size:0.85rem;">Featured image</label>
+                        </div>
+                    </div>
+                    <div style="margin-top:1rem;"><button class="btn-primary" onclick="uploadGalleryImage()" id="galleryUploadBtn">Upload Image</button></div>
+                </div>
+            </div>
+            <div class="section-card">
+                <div class="section-head"><h3>Gallery Images</h3>
+                    <select id="galleryCatFilter" onchange="loadGallery()" style="padding:0.4rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:0.8rem;">
+                        <option value="">All Categories</option>
+                        <option>Rings</option><option>Necklaces</option><option>Bangles</option>
+                        <option>Earrings</option><option>Bridal Sets</option><option>Men's Gold</option>
+                    </select>
+                </div>
+                <div class="gallery-grid" id="galleryGrid"><div class="state-loading" style="grid-column:1/-1">Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- ── GOLD RATES ── -->
+        <div id="page-gold-rates" class="page-section" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.8rem;">
+                <div>
+                    <div id="goldRateSourceBadge"></div>
+                    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.3rem;" id="goldRateUpdatedAt">—</div>
+                </div>
+                <div style="display:flex;gap:0.6rem;">
+                    <button class="btn-small" onclick="loadGoldRates()">↻ Refresh</button>
+                    <button class="btn-small" onclick="forceRefreshGoldRates()" id="forceRefreshBtn">⚡ Force Refresh + Save</button>
+                </div>
+            </div>
+
+            <div class="gold-rate-grid" id="goldRateCards">
+                <div class="state-loading" style="grid-column:1/-1">Loading live gold rates…</div>
+            </div>
+
+            <!-- Super Admin: manual override -->
+            <div class="section-card sa-only" id="goldOverrideSection" style="margin-bottom:1.5rem;">
+                <div class="section-head"><h3>⚙️ Manual Rate Override</h3></div>
+                <div style="padding:1.5rem;">
+                    <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:1rem;">
+                        <input type="checkbox" id="goldIsManual" onchange="toggleManualOverride()">
+                        <label for="goldIsManual" style="font-size:0.85rem;font-weight:600;">Enable Manual Override</label>
+                    </div>
+                    <div id="manualRateFields" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>22KT Manual Rate (₹/gram)</label><input type="number" id="goldManual22k" placeholder="e.g. 6800" step="0.01"></div>
+                        <div class="form-group"><label>24KT Manual Rate (₹/gram)</label><input type="number" id="goldManual24k" placeholder="e.g. 7350" step="0.01"></div>
+                    </div>
+                    <button class="btn-primary" onclick="saveGoldOverride()" style="margin-top:1rem;">Save Override Settings</button>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-head"><h3>Rate History</h3></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Date</th><th>Time</th><th>22KT /g</th><th>24KT /g</th><th>Change</th><th>% Change</th><th>Source</th></tr></thead>
+                        <tbody id="goldHistoryBody"><tr><td colspan="7" class="state-loading">Loading…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ENQUIRIES ── -->
+        <div id="page-enquiries" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>Customer Enquiries</h3></div>
+                <div class="filter-bar">
+                    <input type="text" id="enqSearch" placeholder="Search name, email…" oninput="debounce(loadEnquiries,400)()">
+                    <select id="enqStatusFilter" onchange="loadEnquiries()">
+                        <option value="">All Statuses</option>
+                        <option>New</option><option>Contacted</option><option>In Progress</option><option>Resolved</option><option>Closed</option>
+                    </select>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Message</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="enquiriesTableBody"><tr><td colspan="7" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="enquiriesPagination"></div>
+            </div>
+        </div>
+
+        <!-- ── CUSTOM ORDERS ── -->
+        <div id="page-custom-orders" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>Custom Jewellery Requests</h3></div>
+                <div class="filter-bar">
+                    <input type="text" id="customSearch" placeholder="Search name, email…" oninput="debounce(loadCustomOrders,400)()">
+                    <select id="customStatusFilter" onchange="loadCustomOrders()">
+                        <option value="">All Statuses</option>
+                        <option>New</option><option>Reviewing</option><option>Contacted</option><option>Designing</option>
+                        <option>Quoted</option><option>Approved</option><option>In Production</option><option>Completed</option><option>Rejected</option>
+                    </select>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Budget</th><th>Weight</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="customOrdersTableBody"><tr><td colspan="8" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="customOrdersPagination"></div>
+            </div>
+        </div>
+
+        <!-- ── ADMIN ACCOUNTS (SA only) ── -->
+        <div id="page-admins" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head">
+                    <h3>Admin Account Management</h3>
+                    <button class="btn-small" style="color:#A78BFA;border-color:rgba(122,100,255,0.3);" onclick="openAdminModal()">+ Add Admin</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="adminsTableBody"><tr><td colspan="6" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SITE SETTINGS (SA only) ── -->
+        <div id="page-settings" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>Business Information</h3></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Business Name</label><input type="text" id="set_business_name"></div>
+                    <div class="form-group"><label>Business Email</label><input type="email" id="set_business_email"></div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="set_business_phone"></div>
+                    <div class="form-group"><label>WhatsApp</label><input type="text" id="set_business_whatsapp"></div>
+                    <div class="form-group span2"><label>Address</label><input type="text" id="set_business_address"></div>
+                    <div class="form-group span2"><label>Business Hours</label><input type="text" id="set_business_hours"></div>
+                </div>
+            </div>
+            <div class="section-card">
+                <div class="section-head"><h3>Social Links</h3></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Instagram</label><input type="url" id="set_instagram"></div>
+                    <div class="form-group"><label>Facebook</label><input type="url" id="set_facebook"></div>
+                    <div class="form-group"><label>YouTube</label><input type="url" id="set_youtube"></div>
+                    <div class="form-group"><label>Google Business</label><input type="url" id="set_google_business"></div>
+                </div>
+            </div>
+            <div class="section-card">
+                <div class="section-head"><h3>Website Settings</h3></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Website Title</label><input type="text" id="set_website_title"></div>
+                    <div class="form-group"><label>Default Currency</label><input type="text" id="set_default_currency"></div>
+                    <div class="form-group span2"><label>Meta Description</label><input type="text" id="set_meta_description"></div>
+                    <div class="form-group"><label>Footer Text</label><input type="text" id="set_footer_text"></div>
+                    <div class="form-group"><label>Copyright Text</label><input type="text" id="set_copyright_text"></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-primary" onclick="saveSettings()">Save All Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ACCESS LOGS (SA only) ── -->
+        <div id="page-logs" class="page-section" style="display:none">
+            <div class="section-card">
+                <div class="section-head"><h3>Access Logs</h3></div>
+                <div class="filter-bar">
+                    <input type="text" id="logsSearch" placeholder="Search email, action…" oninput="debounce(loadLogs,400)()">
+                    <select id="logsActionFilter" onchange="loadLogs()"><option value="">All Actions</option></select>
+                    <select id="logsStatusFilter" onchange="loadLogs()">
+                        <option value="">All Results</option><option value="SUCCESS">Success</option><option value="FAILURE">Failure</option>
+                    </select>
+                    <input type="date" id="logsDateFrom" onchange="loadLogs()">
+                    <input type="date" id="logsDateTo" onchange="loadLogs()">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Date/Time</th><th>Admin</th><th>Action</th><th>Module</th><th>IP</th><th>Result</th></tr></thead>
+                        <tbody id="logsTableBody"><tr><td colspan="6" class="state-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="logsPagination"></div>
+            </div>
+        </div>
+
+    </div><!-- /page -->
+</main>
+
+<!-- ── Toast container ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ── Confirm dialog ── -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+    <div class="confirm-box">
+        <h4 id="confirmTitle">Confirm Action</h4>
+        <p id="confirmMessage">Are you sure?</p>
+        <div class="confirm-actions">
+            <button class="btn-secondary" onclick="cancelConfirm()">Cancel</button>
+            <button class="btn-danger"    id="confirmOkBtn" onclick="doConfirm()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Product Modal ── -->
+<div class="modal-overlay hidden" id="productModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h3 id="productModalTitle">Add Product</h3>
+            <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+        </div>
+        <form id="productForm" onsubmit="submitProduct(event)">
+            <div class="form-grid">
+                <div class="form-group"><label>Product Name *</label><input type="text" id="prodName" required></div>
+                <div class="form-group"><label>Category</label><select id="prodCategory"><option value="">Select category</option></select></div>
+                <div class="form-group span2"><label>Description</label><textarea id="prodDesc" rows="3"></textarea></div>
+                <div class="form-group"><label>KT Purity *</label>
+                    <select id="prodPurity" required>
+                        <option value="22">22 KT</option><option value="24">24 KT</option><option value="18">18 KT</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Weight (grams) *</label><input type="number" step="0.001" min="0.001" id="prodWeight" required></div>
+                <div class="form-group"><label>Making Charges (₹)</label><input type="number" step="0.01" min="0" id="prodMaking" value="0"></div>
+                <div class="form-group"><label>Current Price (₹)</label><input type="number" step="0.01" min="0" id="prodPrice" value="0"></div>
+                <div class="form-group"><label>Stock</label><input type="number" min="0" id="prodStock" value="0"></div>
+                <div class="form-group"><label>SKU</label><input type="text" id="prodSku"></div>
+                <div class="form-group"><label>Product Image</label>
+                    <div class="upload-zone" style="padding:1rem;" onclick="document.getElementById('prodImageFile').click()">
+                        <input type="file" id="prodImageFile" accept="image/*" onchange="previewProductImage(this)">
+                        <div id="prodImagePreviewWrap">Click to upload image</div>
+                    </div>
+                </div>
+                <div class="form-group" style="display:flex;flex-direction:column;gap:0.7rem;justify-content:flex-end;">
+                    <label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="prodFeatured"> Featured</label>
+                    <label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="prodActive" checked> Active</label>
+                </div>
+            </div>
+            <input type="hidden" id="prodEditId">
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('productModal')">Cancel</button>
+                <button type="submit" class="btn-primary" id="productSubmitBtn">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Category Modal ── -->
+<div class="modal-overlay hidden" id="catModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h3 id="catModalTitle">Add Category</h3>
+            <button class="modal-close" onclick="closeModal('catModal')">✕</button>
+        </div>
+        <form id="catForm" onsubmit="submitCategory(event)">
+            <div class="form-grid single">
+                <div class="form-group"><label>Name *</label><input type="text" id="catName" required></div>
+                <div class="form-group"><label>Description</label><textarea id="catDesc" rows="3"></textarea></div>
+                <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="catActive" checked style="width:auto;"> Active</label></div>
+            </div>
+            <input type="hidden" id="catEditId">
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('catModal')">Cancel</button>
+                <button type="submit" class="btn-primary" id="catSubmitBtn">Save Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Order Detail Modal ── -->
+<div class="modal-overlay hidden" id="orderModal">
+    <div class="modal" style="max-width:700px;">
+        <div class="modal-head">
+            <h3 id="orderModalTitle">Order Details</h3>
+            <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
+        </div>
+        <div id="orderModalBody" style="padding:1.5rem;"></div>
+    </div>
+</div>
+
+<!-- ── Enquiry Detail Modal ── -->
+<div class="modal-overlay hidden" id="enqModal">
+    <div class="modal" style="max-width:600px;">
+        <div class="modal-head">
+            <h3 id="enqModalTitle">Enquiry Details</h3>
+            <button class="modal-close" onclick="closeModal('enqModal')">✕</button>
+        </div>
+        <div id="enqModalBody" style="padding:1.5rem;"></div>
+    </div>
+</div>
+
+<!-- ── Custom Order Modal ── -->
+<div class="modal-overlay hidden" id="customModal">
+    <div class="modal" style="max-width:640px;">
+        <div class="modal-head">
+            <h3>Custom Order Details</h3>
+            <button class="modal-close" onclick="closeModal('customModal')">✕</button>
+        </div>
+        <div id="customModalBody" style="padding:1.5rem;"></div>
+    </div>
+</div>
+
+<!-- ── Add/Edit Admin Modal ── -->
+<div class="modal-overlay hidden" id="adminModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h3 id="adminModalTitle">Add Administrator</h3>
+            <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
+        </div>
+        <form id="adminForm" onsubmit="submitAdmin(event)">
+            <div class="form-grid">
+                <div class="form-group"><label>Full Name *</label><input type="text" id="adminFormName" required></div>
+                <div class="form-group"><label>Email *</label><input type="email" id="adminFormEmail" required></div>
+                <div class="form-group" id="adminPasswordGroup"><label>Password *</label><input type="password" id="adminFormPassword" minlength="8"></div>
+                <div class="form-group" id="adminConfirmGroup"><label>Confirm Password *</label><input type="password" id="adminFormConfirm" minlength="8"></div>
+                <div class="form-group"><label>Role *</label>
+                    <select id="adminFormRole"><option value="ADMIN">Admin</option><option value="SUPER_ADMIN">Super Admin</option></select>
+                </div>
+                <div class="form-group"><label>Status *</label>
+                    <select id="adminFormStatus"><option value="ACTIVE">Active</option><option value="DISABLED">Disabled</option></select>
+                </div>
+            </div>
+            <input type="hidden" id="adminFormId">
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('adminModal')">Cancel</button>
+                <button type="submit" class="btn-primary" id="adminSubmitBtn">Save Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Change Password Modal ── -->
+<div class="modal-overlay hidden" id="changePasswordModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h3>Change Password</h3>
+            <button class="modal-close" onclick="closeModal('changePasswordModal')">✕</button>
+        </div>
+        <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+            <div class="form-group"><label>New Password</label><input type="password" id="cpNewPassword" minlength="8" placeholder="Min. 8 characters"></div>
+            <div class="form-group"><label>Confirm Password</label><input type="password" id="cpConfirmPassword" minlength="8"></div>
+            <div><button class="btn-primary" onclick="submitChangePassword()">Update Password</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// AUTH BOOTSTRAP
+// ════════════════════════════════════════════════
+const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000'))
+    ? 'http://localhost:3000'
+    : '';
+
+const TOKEN = localStorage.getItem('adminToken');
+const ROLE  = localStorage.getItem('adminRole');
+const ANAME = localStorage.getItem('adminName')  || 'Admin';
+const AEMAIL= localStorage.getItem('adminEmail') || '';
+
+if (!TOKEN) { window.location.replace('admin-login.html'); }
+
+// Verify token with server
+fetch(API_BASE + '/api/admin/auth/me', { headers: authHeaders() })
+    .then(r => { if (!r.ok) doLogout(); })
+    .catch(() => {});
+
+function authHeaders() {
+    return { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' };
+}
+
+// ════════════════════════════════════════════════
+// UI SETUP
+// ════════════════════════════════════════════════
+const roleTag       = document.getElementById('roleTag');
+const saNav         = document.getElementById('saNav');
+const saAdminSection= document.getElementById('saAdminSection');
+const goldOverrideSection = document.getElementById('goldOverrideSection');
+
+document.getElementById('adminEmailTag').textContent = AEMAIL;
+document.getElementById('adminRoleDisplay').textContent = ROLE === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin';
+document.getElementById('adminAvatarLetter').textContent = ANAME.charAt(0).toUpperCase();
+
+if (ROLE === 'SUPER_ADMIN') {
+    roleTag.textContent = 'SUPER ADMIN';
+    roleTag.classList.add('superadmin-role');
+    saNav.classList.add('visible');
+    if (saAdminSection) saAdminSection.classList.add('visible');
+    if (goldOverrideSection) goldOverrideSection.classList.add('visible');
+    document.querySelectorAll('.sa-nav-only').forEach(el => el.classList.add('visible'));
+    document.querySelectorAll('.sa-only').forEach(el => el.classList.add('visible'));
+}
+
+// ════════════════════════════════════════════════
+// ROUTING
+// ════════════════════════════════════════════════
+const PAGE_TITLES = {
+    'dashboard':     ['Dashboard Overview',       'Home › Dashboard'],
+    'orders':        ['Orders',                   'Home › Orders'],
+    'users':         ['User Management',          'Home › Users'],
+    'products':      ['Products Catalogue',       'Home › Products'],
+    'categories':    ['Categories',               'Home › Categories'],
+    'gallery':       ['Gallery Manager',          'Home › Gallery'],
+    'gold-rates':    ['Gold Rate Settings',       'Home › Gold Rates'],
+    'enquiries':     ['Customer Enquiries',       'Home › Enquiries'],
+    'custom-orders': ['Custom Order Requests',    'Home › Custom Orders'],
+    'admins':        ['Admin Accounts',           'Home › Developer › Admin Accounts'],
+    'settings':      ['Site Settings',            'Home › Developer › Site Settings'],
+    'logs':          ['Access Logs',              'Home › Developer › Access Logs'],
+};
+
+const SA_PAGES = ['admins', 'settings', 'logs'];
+
+let currentPage = '';
+
+function navigate(page) {
+    if (SA_PAGES.includes(page) && ROLE !== 'SUPER_ADMIN') {
+        showToast('Access denied — Super Admin only', 'error');
+        return;
+    }
+    // Update URL hash without reload
+    history.pushState({ page }, '', '#' + page);
+    showPage(page);
+    closeSidebar();
+}
+
+function showPage(page) {
+    if (!page) page = 'dashboard';
+
+    // Guard SA pages
+    if (SA_PAGES.includes(page) && ROLE !== 'SUPER_ADMIN') {
+        page = 'dashboard';
+    }
+
+    // Hide all pages
+    document.querySelectorAll('.page-section').forEach(el => el.style.display = 'none');
+
+    // Show selected
+    const el = document.getElementById('page-' + page);
+    if (el) el.style.display = 'block';
+
+    // Update active nav
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navEl = document.getElementById('nav-' + page);
+    if (navEl) navEl.classList.add('active');
+
+    // Update titles
+    const titles = PAGE_TITLES[page] || ['Admin', 'Home'];
+    document.getElementById('pageTitle').textContent      = titles[0];
+    document.getElementById('pageBreadcrumb').textContent = titles[1];
+    document.title = titles[0] + ' — THE 22KT GOLD';
+
+    currentPage = page;
+
+    // Load page data
+    const loaders = {
+        'dashboard':     loadDashboard,
+        'orders':        loadOrders,
+        'users':         loadUsers,
+        'products':      loadProducts,
+        'categories':    loadCategories,
+        'gallery':       loadGallery,
+        'gold-rates':    loadGoldRates,
+        'enquiries':     loadEnquiries,
+        'custom-orders': loadCustomOrders,
+        'admins':        loadAdmins,
+        'settings':      loadSettings,
+        'logs':          loadLogs,
+    };
+    if (loaders[page]) loaders[page]();
+}
+
+// Handle browser back/forward + initial load
+window.addEventListener('popstate', e => {
+    const page = (e.state && e.state.page) || location.hash.replace('#','') || 'dashboard';
+    showPage(page);
+});
+
+// Initial page from URL hash
+const initialPage = location.hash.replace('#','') || 'dashboard';
+showPage(initialPage);
+
+// ════════════════════════════════════════════════
+// SIDEBAR MOBILE
+// ════════════════════════════════════════════════
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('mobileOverlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobileOverlay').classList.remove('show'); }
+
+// ════════════════════════════════════════════════
+// PROFILE DROPDOWN
+// ════════════════════════════════════════════════
+function toggleProfileDropdown() {
+    document.getElementById('profileDropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('.profile-btn')) {
+        document.getElementById('profileDropdown').classList.remove('open');
+    }
+});
+
+// ════════════════════════════════════════════════
+// LOGOUT
+// ════════════════════════════════════════════════
+function logoutAdmin() {
+    confirmAction('Sign Out', 'Are you sure you want to sign out?', () => doLogout());
+}
+function doLogout() {
+    fetch('/api/admin/auth/logout', { method:'POST', headers: authHeaders() }).catch(()=>{});
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminRole');
+    localStorage.removeItem('adminName');
+    localStorage.removeItem('adminEmail');
+    window.location.replace('admin-login.html');
+}
+
+// ════════════════════════════════════════════════
+// API HELPERS
+// ════════════════════════════════════════════════
+async function api(method, url, body) {
+    const opts = { method, headers: authHeaders() };
+    if (body instanceof FormData) {
+        delete opts.headers['Content-Type'];
+        opts.body = body;
+    } else if (body) {
+        opts.body = JSON.stringify(body);
+    }
+    const fullUrl = (url.startsWith('/api') && API_BASE) ? (API_BASE + url) : url;
+    const r = await fetch(fullUrl, opts);
+    if (r.status === 401) { doLogout(); throw new Error('Unauthorized'); }
+    return r;
+}
+
+async function apiJSON(method, url, body) {
+    const r = await api(method, url, body);
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Request failed');
+    return data;
+}
+
+function debounce(fn, delay) {
+    let timer;
+    return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this,args), delay); };
+}
+
+// ════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ════════════════════════════════════════════════
+function showToast(msg, type='info', duration=4000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+}
+
+// ════════════════════════════════════════════════
+// CONFIRM DIALOG
+// ════════════════════════════════════════════════
+let _confirmCallback = null;
+function confirmAction(title, message, callback) {
+    document.getElementById('confirmTitle').textContent   = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmOverlay').classList.remove('hidden');
+    _confirmCallback = callback;
+}
+function doConfirm() {
+    document.getElementById('confirmOverlay').classList.add('hidden');
+    if (_confirmCallback) _confirmCallback();
+    _confirmCallback = null;
+}
+function cancelConfirm() {
+    document.getElementById('confirmOverlay').classList.add('hidden');
+    _confirmCallback = null;
+}
+
+// ════════════════════════════════════════════════
+// MODAL HELPERS
+// ════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ════════════════════════════════════════════════
+// PAGINATION
+// ════════════════════════════════════════════════
+function renderPagination(containerId, page, pages, total, limit, onPage) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    const from = (page-1)*limit + 1;
+    const to   = Math.min(page*limit, total);
+    c.innerHTML = `<span class="pagination-info">Showing ${from}–${to} of ${total}</span>`;
+    if (pages <= 1) return;
+    const prev = document.createElement('button');
+    prev.textContent = '← Prev'; prev.disabled = page <= 1;
+    prev.onclick = () => onPage(page-1);
+    c.appendChild(prev);
+    for (let p = Math.max(1, page-2); p <= Math.min(pages, page+2); p++) {
+        const btn = document.createElement('button');
+        btn.textContent = p; if (p === page) btn.classList.add('active');
+        btn.onclick = () => onPage(p); c.appendChild(btn);
+    }
+    const next = document.createElement('button');
+    next.textContent = 'Next →'; next.disabled = page >= pages;
+    next.onclick = () => onPage(page+1);
+    c.appendChild(next);
+}
+
+// ════════════════════════════════════════════════
+// FORMATTERS
+// ════════════════════════════════════════════════
+const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+
+function statusBadge(status) {
+    const map = {
+        'Delivered':'green','Completed':'green','Active':'green','ACTIVE':'green','SUCCESS':'green',
+        'Processing':'orange','In Production':'orange','Reviewing':'orange','Designing':'orange',
+        'Ready':'blue','Confirmed':'blue','Quoted':'blue','Approved':'blue',
+        'Pending Payment':'red','Pending':'red','New':'red','Failed':'red','Rejected':'red','FAILURE':'red','DISABLED':'red',
+        'Shipped':'purple','Contacted':'purple','Cancelled':'gray','Closed':'gray','Resolved':'gray',
+        'ADMIN':'orange','SUPER_ADMIN':'purple',
+    };
+    const c = map[status] || 'gray';
+    return `<span class="badge badge-${c}">${status}</span>`;
+}
+
+// ════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════
+let dashLoaded = false;
+async function loadDashboard() {
+    loadGoldRateBanner();
+    try {
+        const data = await apiJSON('GET', '/api/admin/dashboard');
+        document.getElementById('statOrders').textContent    = data.stats.totalOrders;
+        document.getElementById('statUsers').textContent     = data.stats.registeredUsers;
+        document.getElementById('statCustom').textContent    = data.stats.customRequests;
+        document.getElementById('statEnquiries').textContent = data.stats.openEnquiries;
+
+        const tbody = document.getElementById('dashRecentOrders');
+        if (!data.recentOrders.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="state-empty">No orders yet.</td></tr>';
+        } else {
+            tbody.innerHTML = data.recentOrders.map(o => `
+                <tr>
+                    <td class="order-id">${o.order_number}</td>
+                    <td>${o.customer_name}</td>
+                    <td class="truncate">${o.product_name}</td>
+                    <td>${o.weight} gm</td>
+                    <td>${statusBadge(o.order_status)}</td>
+                    <td>${fmtDate(o.created_at)}</td>
+                </tr>`).join('');
+        }
+
+        if (ROLE === 'SUPER_ADMIN') loadDashAdmins();
+    } catch(e) {
+        document.getElementById('dashRecentOrders').innerHTML = `<tr><td colspan="6" class="state-error">Failed to load dashboard data.</td></tr>`;
+    }
+}
+
+async function loadGoldRateBanner() {
+    try {
+        const d = await apiJSON('GET', '/api/admin/gold-rates');
+        document.getElementById('dashRate22').textContent  = fmt(d.rate22k) + '/g';
+        document.getElementById('dashRate24').textContent  = fmt(d.rate24k) + '/g';
+        document.getElementById('dashRateTime').textContent= fmtDateTime(d.fetchedAt);
+    } catch(e) { document.getElementById('dashRate22').textContent = 'Unavailable'; }
+}
+
+async function loadDashAdmins() {
+    try {
+        const admins = await apiJSON('GET', '/api/admin/admins');
+        const tbody = document.getElementById('dashAdminsTable');
+        tbody.innerHTML = admins.map(a => `
+            <tr>
+                <td>${a.email}</td>
+                <td>${statusBadge(a.role)}</td>
+                <td>${fmtDateTime(a.last_login) || 'Never'}</td>
+                <td>${statusBadge(a.status)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn-secondary" onclick="navigate('admins')" style="font-size:0.7rem;">Manage</button>
+                </td>
+            </tr>`).join('');
+    } catch(e) {}
+}
+
+// ════════════════════════════════════════════════
+// ORDERS
+// ════════════════════════════════════════════════
+let ordersPage = 1;
+async function loadOrders(page) {
+    if (page) ordersPage = page;
+    const search  = document.getElementById('ordersSearch')?.value || '';
+    const status  = document.getElementById('ordersStatusFilter')?.value || '';
+    const payment = document.getElementById('ordersPaymentFilter')?.value || '';
+    const from    = document.getElementById('ordersDateFrom')?.value || '';
+    const to      = document.getElementById('ordersDateTo')?.value   || '';
+    const tbody   = document.getElementById('ordersTableBody');
+    tbody.innerHTML = '<tr><td colspan="9" class="state-loading">Loading...</td></tr>';
+
+    try {
+        const params = new URLSearchParams({ page: ordersPage, limit: 20, search, status, payment, dateFrom: from, dateTo: to });
+        const data   = await apiJSON('GET', '/api/admin/orders?' + params);
+
+        if (!data.orders.length) {
+            tbody.innerHTML = '<tr><td colspan="9" class="state-empty">No orders found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.orders.map(o => `
+                <tr>
+                    <td class="order-id">${o.order_number}</td>
+                    <td>${o.customer_name}</td>
+                    <td class="truncate">${o.product_name}</td>
+                    <td>${o.weight} gm</td>
+                    <td>${fmt(o.total_amount)}</td>
+                    <td>${statusBadge(o.payment_status)}</td>
+                    <td>${statusBadge(o.order_status)}</td>
+                    <td>${fmtDate(o.created_at)}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn-secondary" onclick="viewOrder(${o.id})">View</button>
+                    </td>
+                </tr>`).join('');
+        }
+        renderPagination('ordersPagination', data.page, data.pages, data.total, data.limit, loadOrders);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="9" class="state-error">Failed to load orders. ${e.message}</td></tr>`;
+    }
+}
+
+async function viewOrder(id) {
+    openModal('orderModal');
+    document.getElementById('orderModalBody').innerHTML = '<div class="state-loading">Loading…</div>';
+    try {
+        const o = await apiJSON('GET', '/api/admin/orders/' + id);
+        document.getElementById('orderModalTitle').textContent = 'Order ' + o.order_number;
+        document.getElementById('orderModalBody').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                <div><div class="gold-banner-label">Customer</div><div>${o.customer_name}</div></div>
+                <div><div class="gold-banner-label">Phone</div><div>${o.customer_phone || '—'}</div></div>
+                <div><div class="gold-banner-label">Email</div><div>${o.customer_email || '—'}</div></div>
+                <div><div class="gold-banner-label">Address</div><div>${o.address || '—'}</div></div>
+                <div><div class="gold-banner-label">Product</div><div>${o.product_name}</div></div>
+                <div><div class="gold-banner-label">Weight</div><div>${o.weight} gm</div></div>
+                <div><div class="gold-banner-label">Purity</div><div>${o.purity} KT</div></div>
+                <div><div class="gold-banner-label">Gold Rate Used</div><div>${fmt(o.gold_rate_used)}/g</div></div>
+                <div><div class="gold-banner-label">Making Charges</div><div>${fmt(o.making_charges)}</div></div>
+                <div><div class="gold-banner-label">GST</div><div>${fmt(o.gst)}</div></div>
+                <div><div class="gold-banner-label">Discount</div><div>${fmt(o.discount)}</div></div>
+                <div><div class="gold-banner-label" style="color:var(--gold)">Total Amount</div><div style="font-size:1.2rem;font-weight:700;color:var(--gold)">${fmt(o.total_amount)}</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                <div>
+                    <div class="gold-banner-label">Order Status</div>
+                    <select id="orderStatusSelect" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">
+                        ${['Pending Payment','Confirmed','Processing','In Production','Ready','Shipped','Delivered','Cancelled']
+                            .map(s => `<option${s===o.order_status?' selected':''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <div class="gold-banner-label">Payment Status</div>
+                    <select id="paymentStatusSelect" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">
+                        ${['Pending','Paid','Refunded','Failed']
+                            .map(s => `<option${s===o.payment_status?' selected':''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <div class="gold-banner-label">Admin Notes</div>
+                <textarea id="orderNotesTA" rows="3" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">${o.notes || ''}</textarea>
+            </div>
+            <div style="display:flex;gap:0.8rem;justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeModal('orderModal')">Close</button>
+                <button class="btn-primary" onclick="updateOrder(${o.id})">Save Changes</button>
+            </div>`;
+    } catch(e) {
+        document.getElementById('orderModalBody').innerHTML = `<div class="state-error">Failed to load order. ${e.message}</div>`;
+    }
+}
+
+async function updateOrder(id) {
+    try {
+        await apiJSON('PATCH', '/api/admin/orders/' + id, {
+            order_status:   document.getElementById('orderStatusSelect').value,
+            payment_status: document.getElementById('paymentStatusSelect').value,
+            notes:          document.getElementById('orderNotesTA').value
+        });
+        closeModal('orderModal');
+        showToast('Order updated successfully', 'success');
+        loadOrders();
+    } catch(e) { showToast('Failed to update order: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
+// USERS
+// ════════════════════════════════════════════════
+let usersPage = 1;
+async function loadUsers(page) {
+    if (page) usersPage = page;
+    const search = document.getElementById('usersSearch')?.value || '';
+    const status = document.getElementById('usersStatusFilter')?.value || '';
+    const tbody  = document.getElementById('usersTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" class="state-loading">Loading...</td></tr>';
+
+    try {
+        const params = new URLSearchParams({ page: usersPage, limit: 20, search, status });
+        const data   = await apiJSON('GET', '/api/admin/users?' + params);
+
+        if (!data.users.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="state-empty">No users found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.users.map(u => `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td>${u.phone || '—'}</td>
+                    <td>${u.order_count}</td>
+                    <td>${fmt(u.total_spent)}</td>
+                    <td>${statusBadge(u.status)}</td>
+                    <td>${fmtDate(u.created_at)}</td>
+                    <td style="white-space:nowrap;">
+                        ${u.status==='ACTIVE'
+                            ? `<button class="btn-danger" onclick="toggleUser(${u.id},'DISABLED')">Disable</button>`
+                            : `<button class="btn-secondary" onclick="toggleUser(${u.id},'ACTIVE')">Enable</button>`
+                        }
+                    </td>
+                </tr>`).join('');
+        }
+        renderPagination('usersPagination', data.page, data.pages, data.total, data.limit, loadUsers);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="state-error">Failed to load users.</td></tr>`;
+    }
+}
+
+async function toggleUser(id, status) {
+    const action = status === 'DISABLED' ? 'Disable' : 'Enable';
+    confirmAction(`${action} User`, `Are you sure you want to ${action.toLowerCase()} this user?`, async () => {
+        try {
+            await apiJSON('PATCH', '/api/admin/users/' + id, { status });
+            showToast(`User ${action.toLowerCase()}d`, 'success');
+            loadUsers();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+}
+
+// ════════════════════════════════════════════════
+// PRODUCTS
+// ════════════════════════════════════════════════
+let prodsPage = 1;
+let categories = [];
+
+async function loadProducts(page) {
+    if (page) prodsPage = page;
+    const search   = document.getElementById('prodsSearch')?.value || '';
+    const category = document.getElementById('prodsCatFilter')?.value || '';
+    const active   = document.getElementById('prodsActiveFilter')?.value;
+    const tbody    = document.getElementById('productsTableBody');
+    tbody.innerHTML = '<tr><td colspan="9" class="state-loading">Loading...</td></tr>';
+
+    // Load categories if not already
+    if (!categories.length) await refreshCategories();
+
+    try {
+        const params = new URLSearchParams({ page: prodsPage, limit: 20, search, category, active: active||'' });
+        const data   = await apiJSON('GET', '/api/admin/products?' + params);
+
+        if (!data.products.length) {
+            tbody.innerHTML = '<tr><td colspan="9" class="state-empty">No products found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.products.map(p => `
+                <tr>
+                    <td>${p.primary_image ? `<img src="${p.primary_image}" class="product-img-preview" alt="">` : '—'}</td>
+                    <td>${p.name}</td>
+                    <td>${p.category_name || '—'}</td>
+                    <td>${p.weight} gm</td>
+                    <td>${statusBadge(p.purity + ' KT')}</td>
+                    <td style="color:var(--muted);font-size:0.78rem;">${p.sku || '—'}</td>
+                    <td>${p.stock}</td>
+                    <td>${p.active ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-red">No</span>'}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn-secondary" onclick="editProduct(${p.id})">Edit</button>
+                        <button class="btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                    </td>
+                </tr>`).join('');
+        }
+        renderPagination('productsPagination', data.page, data.pages, data.total, data.limit, loadProducts);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="9" class="state-error">Failed to load products.</td></tr>`;
+    }
+}
+
+async function refreshCategories() {
+    try {
+        categories = await apiJSON('GET', '/api/admin/categories');
+        const catSelects = ['prodsCatFilter', 'prodCategory'];
+        catSelects.forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const firstOpt = sel.options[0];
+            sel.innerHTML = '';
+            sel.appendChild(firstOpt);
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id; opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+        });
+    } catch(e) {}
+}
+
+function openProductModal(product) {
+    document.getElementById('productModalTitle').textContent = product ? 'Edit Product' : 'Add Product';
+    document.getElementById('productSubmitBtn').textContent  = product ? 'Update Product' : 'Save Product';
+    document.getElementById('productForm').reset();
+    document.getElementById('prodImagePreviewWrap').innerHTML = 'Click to upload image';
+    document.getElementById('prodEditId').value = '';
+    refreshCategories();
+
+    if (product) {
+        document.getElementById('prodEditId').value   = product.id;
+        document.getElementById('prodName').value     = product.name;
+        document.getElementById('prodDesc').value     = product.description || '';
+        document.getElementById('prodPurity').value   = product.purity;
+        document.getElementById('prodWeight').value   = product.weight;
+        document.getElementById('prodMaking').value   = product.making_charges;
+        document.getElementById('prodPrice').value    = product.current_price;
+        document.getElementById('prodStock').value    = product.stock;
+        document.getElementById('prodSku').value      = product.sku || '';
+        document.getElementById('prodFeatured').checked = !!product.featured;
+        document.getElementById('prodActive').checked   = !!product.active;
+        if (product.category_id) document.getElementById('prodCategory').value = product.category_id;
+    }
+    openModal('productModal');
+}
+
+async function editProduct(id) {
+    try {
+        const product = await apiJSON('GET', '/api/admin/products/' + id);
+        openProductModal(product);
+    } catch(e) { showToast('Failed to load product', 'error'); }
+}
+
+function previewProductImage(input) {
+    if (!input.files[0]) return;
+    const wrap = document.getElementById('prodImagePreviewWrap');
+    const url  = URL.createObjectURL(input.files[0]);
+    wrap.innerHTML = `<img src="${url}" style="max-width:150px;max-height:150px;object-fit:cover;border:1px solid var(--border);">`;
+}
+
+async function submitProduct(e) {
+    e.preventDefault();
+    const btn = document.getElementById('productSubmitBtn');
+    const id  = document.getElementById('prodEditId').value;
+    btn.textContent = 'Saving...'; btn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('name',            document.getElementById('prodName').value);
+    fd.append('category_id',     document.getElementById('prodCategory').value);
+    fd.append('description',     document.getElementById('prodDesc').value);
+    fd.append('purity',          document.getElementById('prodPurity').value);
+    fd.append('weight',          document.getElementById('prodWeight').value);
+    fd.append('making_charges',  document.getElementById('prodMaking').value);
+    fd.append('current_price',   document.getElementById('prodPrice').value);
+    fd.append('stock',           document.getElementById('prodStock').value);
+    fd.append('sku',             document.getElementById('prodSku').value);
+    fd.append('featured',        document.getElementById('prodFeatured').checked);
+    fd.append('active',          document.getElementById('prodActive').checked);
+    const imgFile = document.getElementById('prodImageFile').files[0];
+    if (imgFile) fd.append('image', imgFile);
+
+    try {
+        const method = id ? 'PUT' : 'POST';
+        const url    = id ? '/api/admin/products/' + id : '/api/admin/products';
+        await api(method, url, fd);
+        closeModal('productModal');
+        showToast('Product ' + (id ? 'updated' : 'created') + ' successfully', 'success');
+        loadProducts();
+    } catch(e) {
+        showToast('Failed: ' + e.message, 'error');
+    } finally {
+        btn.textContent = id ? 'Update Product' : 'Save Product';
+        btn.disabled = false;
+    }
+}
+
+async function deleteProduct(id) {
+    confirmAction('Delete Product', 'This will deactivate the product. Continue?', async () => {
+        try {
+            await apiJSON('DELETE', '/api/admin/products/' + id);
+            showToast('Product deleted', 'success');
+            loadProducts();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+}
+
+// ════════════════════════════════════════════════
+// CATEGORIES
+// ════════════════════════════════════════════════
+async function loadCategories() {
+    const search = document.getElementById('catsSearch')?.value || '';
+    const tbody  = document.getElementById('categoriesTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="state-loading">Loading...</td></tr>';
+
+    try {
+        const params = new URLSearchParams({ search });
+        const data   = await apiJSON('GET', '/api/admin/categories?' + params);
+
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="state-empty">No categories found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(c => `
+                <tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td style="color:var(--muted);font-size:0.78rem;">${c.slug}</td>
+                    <td>${c.product_count}</td>
+                    <td>${c.active ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-red">No</span>'}</td>
+                    <td>${fmtDate(c.created_at)}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn-secondary" onclick="editCategory(${c.id})">Edit</button>
+                        <button class="btn-danger"    onclick="deleteCategory(${c.id}, '${c.name}', ${c.product_count})">Delete</button>
+                    </td>
+                </tr>`).join('');
+        }
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="state-error">Failed to load categories.</td></tr>`;
+    }
+}
+
+function openCatModal(cat) {
+    document.getElementById('catModalTitle').textContent = cat ? 'Edit Category' : 'Add Category';
+    document.getElementById('catForm').reset();
+    document.getElementById('catEditId').value = '';
+    if (cat) {
+        document.getElementById('catEditId').value = cat.id;
+        document.getElementById('catName').value   = cat.name;
+        document.getElementById('catDesc').value   = cat.description || '';
+        document.getElementById('catActive').checked = !!cat.active;
+    }
+    openModal('catModal');
+}
+
+async function editCategory(id) {
+    try {
+        const cats = await apiJSON('GET', '/api/admin/categories');
+        const cat  = cats.find(c => c.id === id);
+        if (cat) openCatModal(cat);
+    } catch(e) { showToast('Failed to load category', 'error'); }
+}
+
+async function submitCategory(e) {
+    e.preventDefault();
+    const btn = document.getElementById('catSubmitBtn');
+    const id  = document.getElementById('catEditId').value;
+    btn.textContent = 'Saving...'; btn.disabled = true;
+
+    try {
+        const body = {
+            name:        document.getElementById('catName').value,
+            description: document.getElementById('catDesc').value,
+            active:      document.getElementById('catActive').checked
+        };
+        if (id) await apiJSON('PUT', '/api/admin/categories/' + id, body);
+        else    await apiJSON('POST', '/api/admin/categories', body);
+        closeModal('catModal');
+        showToast('Category ' + (id ? 'updated' : 'created'), 'success');
+        loadCategories();
+    } catch(e) {
+        showToast('Failed: ' + e.message, 'error');
+    } finally {
+        btn.textContent = 'Save Category'; btn.disabled = false;
+    }
+}
+
+async function deleteCategory(id, name, productCount) {
+    if (productCount > 0) {
+        showToast(`Cannot delete "${name}" — it has ${productCount} product(s). Reassign them first.`, 'error', 6000);
+        return;
+    }
+    confirmAction('Delete Category', `Delete category "${name}"? This cannot be undone.`, async () => {
+        try {
+            await apiJSON('DELETE', '/api/admin/categories/' + id);
+            showToast('Category deleted', 'success');
+            loadCategories();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+}
+
+// ════════════════════════════════════════════════
+// GALLERY
+// ════════════════════════════════════════════════
+function handleGalleryPreview() {
+    const file = document.getElementById('galleryFileInput').files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { showToast('File exceeds 8 MB limit', 'error'); return; }
+    const preview = document.getElementById('galleryUploadPreview');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+}
+
+async function uploadGalleryImage() {
+    const file  = document.getElementById('galleryFileInput').files[0];
+    const title = document.getElementById('galleryTitle').value.trim();
+    if (!file)  { showToast('Please select an image file', 'error'); return; }
+    if (!title) { showToast('Title is required', 'error'); return; }
+
+    const btn = document.getElementById('galleryUploadBtn');
+    btn.textContent = 'Uploading...'; btn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('image',    file);
+    fd.append('title',    title);
+    fd.append('alt_text', document.getElementById('galleryAlt').value);
+    fd.append('category', document.getElementById('galleryCategory').value);
+    fd.append('featured', document.getElementById('galleryFeatured').checked);
+
+    try {
+        await api('POST', '/api/admin/gallery', fd);
+        showToast('Image uploaded successfully', 'success');
+        document.getElementById('galleryTitle').value = '';
+        document.getElementById('galleryAlt').value   = '';
+        document.getElementById('galleryUploadPreview').style.display = 'none';
+        document.getElementById('galleryFileInput').value = '';
+        loadGallery();
+    } catch(e) {
+        showToast('Upload failed: ' + e.message, 'error');
+    } finally {
+        btn.textContent = 'Upload Image'; btn.disabled = false;
+    }
+}
+
+async function loadGallery() {
+    const category = document.getElementById('galleryCatFilter')?.value || '';
+    const grid     = document.getElementById('galleryGrid');
+    grid.innerHTML = '<div class="state-loading" style="grid-column:1/-1">Loading...</div>';
+
+    try {
+        const params = new URLSearchParams({ limit: 48, category });
+        const data   = await apiJSON('GET', '/api/admin/gallery?' + params);
+
+        if (!data.items.length) {
+            grid.innerHTML = '<div class="state-empty" style="grid-column:1/-1">No gallery images yet.</div>';
+            return;
+        }
+        grid.innerHTML = data.items.map(img => `
+            <div class="gallery-item">
+                <img src="${img.image_url}" alt="${img.alt_text || img.title}" loading="lazy">
+                <div class="gallery-item-overlay">
+                    <button class="btn-danger" onclick="deleteGalleryItem(${img.id})" style="font-size:0.75rem;">🗑 Delete</button>
+                </div>
+                <div class="gallery-item-label">${img.title}</div>
+            </div>`).join('');
+    } catch(e) {
+        grid.innerHTML = `<div class="state-error" style="grid-column:1/-1">Failed to load gallery.</div>`;
+    }
+}
+
+async function deleteGalleryItem(id) {
+    confirmAction('Delete Image', 'Permanently delete this gallery image?', async () => {
+        try {
+            await apiJSON('DELETE', '/api/admin/gallery/' + id);
+            showToast('Image deleted', 'success');
+            loadGallery();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+}
+
+// ════════════════════════════════════════════════
+// GOLD RATES
+// ════════════════════════════════════════════════
+async function loadGoldRates() {
+    document.getElementById('goldRateCards').innerHTML = '<div class="state-loading" style="grid-column:1/-1">Loading live rates…</div>';
+    try {
+        const d = await apiJSON('GET', '/api/admin/gold-rates');
+        document.getElementById('goldRateSourceBadge').innerHTML =
+            d.isManual ? '<span class="manual-badge">⚠ MANUAL ADMIN RATE</span>' : '<span class="live-badge">● LIVE API RATE</span>';
+        document.getElementById('goldRateUpdatedAt').textContent = 'Last updated: ' + fmtDateTime(d.fetchedAt);
+
+        document.getElementById('goldRateCards').innerHTML = [
+            { label:'24 KT Gold', rate: d.rate24k, per10: (d.rate24k*10).toFixed(2), change: d.change*(24/22), pct: d.changePercent },
+            { label:'22 KT Gold', rate: d.rate22k, per10: (d.rate22k*10).toFixed(2), change: d.change,          pct: d.changePercent },
+            { label:'18 KT Gold', rate: d.rate18k, per10: (d.rate18k*10).toFixed(2), change: d.change*(18/22),  pct: d.changePercent },
+        ].map(r => `
+            <div class="gold-rate-card">
+                <div class="rate-purity">${r.label}</div>
+                <div class="rate-value">${fmt(r.rate)}</div>
+                <div class="rate-unit">per gram</div>
+                <div class="rate-unit" style="margin-top:0.2rem;">₹${Number(r.per10).toLocaleString('en-IN')} per 10 grams</div>
+                <div class="rate-change ${r.change >= 0 ? 'rate-up' : 'rate-down'}">
+                    ${r.change >= 0 ? '↑' : '↓'} ${fmt(Math.abs(r.change))} (${Math.abs(r.pct).toFixed(2)}%)
+                </div>
+                <div class="rate-source">Source: ${d.provider}</div>
+            </div>`).join('');
+
+        // Load history
+        loadGoldHistory();
+
+        // SA: set override UI
+        if (ROLE === 'SUPER_ADMIN') {
+            document.getElementById('goldIsManual').checked = d.isManual;
+            toggleManualOverride();
+        }
+    } catch(e) {
+        document.getElementById('goldRateCards').innerHTML = `<div class="state-error" style="grid-column:1/-1">Failed to load gold rates. ${e.message}</div>`;
+    }
+}
+
+async function forceRefreshGoldRates() {
+    const btn = document.getElementById('forceRefreshBtn');
+    btn.textContent = 'Refreshing...'; btn.disabled = true;
+    try {
+        await apiJSON('POST', '/api/admin/gold-rates/refresh');
+        showToast('Rates refreshed and saved to history', 'success');
+        loadGoldRates();
+    } catch(e) {
+        showToast('Refresh failed: ' + e.message, 'error');
+    } finally {
+        btn.textContent = '⚡ Force Refresh + Save'; btn.disabled = false;
+    }
+}
+
+async function loadGoldHistory() {
+    const tbody = document.getElementById('goldHistoryBody');
+    try {
+        const rows = await apiJSON('GET', '/api/admin/gold-rates/history?limit=30');
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="state-empty">No history yet. Click "Force Refresh + Save" to record a snapshot.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map(r => {
+            const d = new Date(r.created_at);
+            const up = r.change_percent >= 0;
+            return `<tr>
+                <td>${d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})}</td>
+                <td>${d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})}</td>
+                <td>${fmt(r.rate_22k)}</td>
+                <td>${fmt(r.rate_24k)}</td>
+                <td class="${up?'rate-up':'rate-down'}">${up?'↑':'↓'} ${fmt(Math.abs(r.change_amount))}</td>
+                <td class="${up?'rate-up':'rate-down'}">${up?'+':''}${r.change_percent}%</td>
+                <td style="font-size:0.75rem;color:var(--muted);">${r.source}</td>
+            </tr>`;
+        }).join('');
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="7" class="state-error">Failed to load history.</td></tr>`;
+    }
+}
+
+function toggleManualOverride() {
+    const enabled = document.getElementById('goldIsManual').checked;
+    const fields  = document.getElementById('manualRateFields');
+    if (fields) fields.style.display = enabled ? 'grid' : 'none';
+}
+
+async function saveGoldOverride() {
+    const isManual = document.getElementById('goldIsManual').checked;
+    const m22k = document.getElementById('goldManual22k').value;
+    const m24k = document.getElementById('goldManual24k').value;
+    if (isManual && !m22k) { showToast('Please enter the 22KT manual rate', 'error'); return; }
+    try {
+        await apiJSON('PATCH', '/api/admin/gold-rates/override', { is_manual: isManual, manual_22k: m22k, manual_24k: m24k });
+        showToast('Override settings saved', 'success');
+        loadGoldRates();
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
+// ENQUIRIES
+// ════════════════════════════════════════════════
+let enqPage = 1;
+async function loadEnquiries(page) {
+    if (page) enqPage = page;
+    const search = document.getElementById('enqSearch')?.value || '';
+    const status = document.getElementById('enqStatusFilter')?.value || '';
+    const tbody  = document.getElementById('enquiriesTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="state-loading">Loading...</td></tr>';
+
+    try {
+        const params = new URLSearchParams({ page: enqPage, limit: 20, search, status });
+        const data   = await apiJSON('GET', '/api/admin/enquiries?' + params);
+
+        if (!data.enquiries.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="state-empty">No enquiries found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.enquiries.map(e => `
+                <tr>
+                    <td style="color:var(--muted);font-size:0.75rem;">#${e.id}</td>
+                    <td>${e.name}</td>
+                    <td>${e.phone || '—'}</td>
+                    <td class="truncate">${e.message}</td>
+                    <td>${statusBadge(e.status)}</td>
+                    <td>${fmtDate(e.created_at)}</td>
+                    <td><button class="btn-secondary" onclick="viewEnquiry(${e.id})">View</button></td>
+                </tr>`).join('');
+        }
+        renderPagination('enquiriesPagination', data.page, data.pages, data.total, data.limit, loadEnquiries);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="7" class="state-error">Failed to load enquiries.</td></tr>`;
+    }
+}
+
+async function viewEnquiry(id) {
+    openModal('enqModal');
+    document.getElementById('enqModalBody').innerHTML = '<div class="state-loading">Loading…</div>';
+    try {
+        const e = await apiJSON('GET', '/api/admin/enquiries/' + id);
+        document.getElementById('enqModalTitle').textContent = 'Enquiry #' + e.id;
+        document.getElementById('enqModalBody').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                <div><div class="gold-banner-label">Name</div><div>${e.name}</div></div>
+                <div><div class="gold-banner-label">Phone</div><div>${e.phone || '—'}</div></div>
+                <div><div class="gold-banner-label">Email</div><div>${e.email || '—'}</div></div>
+                <div><div class="gold-banner-label">Date</div><div>${fmtDateTime(e.created_at)}</div></div>
+            </div>
+            <div style="margin-bottom:1rem;"><div class="gold-banner-label">Message</div><div style="margin-top:0.4rem;padding:1rem;background:var(--dark);">${e.message}</div></div>
+            <div style="margin-bottom:1rem;">
+                <div class="gold-banner-label">Status</div>
+                <select id="enqStatusSelect" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">
+                    ${['New','Contacted','In Progress','Resolved','Closed'].map(s => `<option${s===e.status?' selected':''}>${s}</option>`).join('')}
+                </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <div class="gold-banner-label">Admin Notes</div>
+                <textarea id="enqNotesTA" rows="3" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">${e.admin_notes || ''}</textarea>
+            </div>
+            <div style="display:flex;gap:0.8rem;justify-content:flex-end;">
+                <button class="btn-danger" onclick="deleteEnquiry(${e.id})">Archive</button>
+                <button class="btn-primary" onclick="updateEnquiry(${e.id})">Save Changes</button>
+            </div>`;
+    } catch(e) {
+        document.getElementById('enqModalBody').innerHTML = `<div class="state-error">Failed to load enquiry.</div>`;
+    }
+}
+
+async function updateEnquiry(id) {
+    try {
+        await apiJSON('PATCH', '/api/admin/enquiries/' + id, {
+            status:      document.getElementById('enqStatusSelect').value,
+            admin_notes: document.getElementById('enqNotesTA').value
+        });
+        closeModal('enqModal');
+        showToast('Enquiry updated', 'success');
+        loadEnquiries();
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+async function deleteEnquiry(id) {
+    confirmAction('Archive Enquiry', 'Permanently delete this enquiry?', async () => {
+        try {
+            await apiJSON('DELETE', '/api/admin/enquiries/' + id);
+            closeModal('enqModal');
+            showToast('Enquiry archived', 'success');
+            loadEnquiries();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+}
+
+// ════════════════════════════════════════════════
+// CUSTOM ORDERS
+// ════════════════════════════════════════════════
+let customPage = 1;
+async function loadCustomOrders(page) {
+    if (page) customPage = page;
+    const search = document.getElementById('customSearch')?.value || '';
+    const status = document.getElementById('customStatusFilter')?.value || '';
+    const tbody  = document.getElementById('customOrdersTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" class="state-loading">Loading...</td></tr>';
+
+    try {
+        const params = new URLSearchParams({ page: customPage, limit: 20, search, status });
+        const data   = await apiJSON('GET', '/api/admin/custom-orders?' + params);
+
+        if (!data.customOrders.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="state-empty">No custom orders found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.customOrders.map(c => `
+                <tr>
+                    <td style="color:var(--muted);font-size:0.75rem;">#${c.id}</td>
+                    <td>${c.name}</td>
+                    <td>${c.jewellery_type}</td>
+                    <td>${c.budget ? fmt(c.budget) : '—'}</td>
+                    <td>${c.weight ? c.weight + ' gm' : '—'}</td>
+                    <td>${statusBadge(c.status)}</td>
+                    <td>${fmtDate(c.created_at)}</td>
+                    <td><button class="btn-secondary" onclick="viewCustomOrder(${c.id})">View</button></td>
+                </tr>`).join('');
+        }
+        renderPagination('customOrdersPagination', data.page, data.pages, data.total, data.limit, loadCustomOrders);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="state-error">Failed to load custom orders.</td></tr>`;
+    }
+}
+
+async function viewCustomOrder(id) {
+    openModal('customModal');
+    document.getElementById('customModalBody').innerHTML = '<div class="state-loading">Loading…</div>';
+    try {
+        const c = await apiJSON('GET', '/api/admin/custom-orders/' + id);
+        document.getElementById('customModalBody').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                <div><div class="gold-banner-label">Name</div><div>${c.name}</div></div>
+                <div><div class="gold-banner-label">Phone</div><div>${c.phone || '—'}</div></div>
+                <div><div class="gold-banner-label">Email</div><div>${c.email || '—'}</div></div>
+                <div><div class="gold-banner-label">Jewellery Type</div><div>${c.jewellery_type}</div></div>
+                <div><div class="gold-banner-label">Weight</div><div>${c.weight ? c.weight + ' gm' : '—'}</div></div>
+                <div><div class="gold-banner-label">Purity</div><div>${c.purity ? c.purity + ' KT' : '—'}</div></div>
+                <div><div class="gold-banner-label">Budget</div><div>${c.budget ? fmt(c.budget) : '—'}</div></div>
+                <div><div class="gold-banner-label">Requested</div><div>${fmtDate(c.created_at)}</div></div>
+            </div>
+            <div style="margin-bottom:1rem;"><div class="gold-banner-label">Description</div><div style="margin-top:0.4rem;padding:1rem;background:var(--dark);">${c.description}</div></div>
+            ${c.reference_image ? `<div style="margin-bottom:1rem;"><div class="gold-banner-label">Reference Image</div><img src="${c.reference_image}" style="max-width:200px;margin-top:0.4rem;border:1px solid var(--border);"></div>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                <div>
+                    <div class="gold-banner-label">Status</div>
+                    <select id="customStatusSelect" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">
+                        ${['New','Reviewing','Contacted','Designing','Quoted','Approved','In Production','Completed','Rejected']
+                            .map(s => `<option${s===c.status?' selected':''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <div class="gold-banner-label">Quote Amount (₹)</div>
+                    <input type="number" id="customQuoteInput" value="${c.quote_amount || ''}" placeholder="Enter quote" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">
+                </div>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <div class="gold-banner-label">Admin Notes</div>
+                <textarea id="customNotesTA" rows="3" style="width:100%;padding:0.6rem;border:1px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:0.4rem;">${c.admin_notes || ''}</textarea>
+            </div>
+            <div style="display:flex;gap:0.8rem;justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeModal('customModal')">Close</button>
+                <button class="btn-primary" onclick="updateCustomOrder(${c.id})">Save Changes</button>
+            </div>`;
+    } catch(e) {
+        document.getElementById('customModalBody').innerHTML = `<div class="state-error">Failed to load custom order.</div>`;
+    }
+}
+
+async function updateCustomOrder(id) {
+    try {
+        await apiJSON('PATCH', '/api/admin/custom-orders/' + id, {
+            status:       document.getElementById('customStatusSelect').value,
+            admin_notes:  document.getElementById('customNotesTA').value,
+            quote_amount: document.getElementById('customQuoteInput').value || null
+        });
+        closeModal('customModal');
+        showToast('Custom order updated', 'success');
+        loadCustomOrders();
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
+// ADMINS (Super Admin Only)
+// ════════════════════════════════════════════════
+async function loadAdmins() {
+    const tbody = document.getElementById('adminsTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="state-loading">Loading...</td></tr>';
+    try {
+        const admins = await apiJSON('GET', '/api/admin/admins');
+        if (!admins.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="state-empty">No administrators found.</td></tr>';
+            return;
+        }
+        const myId = (await apiJSON('GET', '/api/admin/auth/me')).id;
+        tbody.innerHTML = admins.map(a => `
+            <tr>
+                <td>${a.name}${a.id===myId?' <span style="font-size:0.65rem;color:var(--muted);">(you)</span>':''}</td>
+                <td>${a.email}</td>
+                <td>${statusBadge(a.role)}</td>
+                <td>${fmtDateTime(a.last_login) || 'Never'}</td>
+                <td>${statusBadge(a.status)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn-secondary" onclick="openEditAdmin(${a.id})">Edit</button>
+                    ${a.id !== myId ? `
+                        ${a.status==='ACTIVE'
+                            ? `<button class="btn-danger" onclick="toggleAdminStatus(${a.id},'DISABLED')">Disable</button>`
+                            : `<button class="btn-secondary" onclick="toggleAdminStatus(${a.id},'ACTIVE')">Enable</button>`
+                        }
+                    ` : ''}
+                    <button class="btn-secondary" onclick="openResetPassword(${a.id})">Reset Pwd</button>
+                </td>
+            </tr>`).join('');
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="state-error">Failed to load administrators.</td></tr>`;
+    }
+}
+
+function openAdminModal() {
+    document.getElementById('adminModalTitle').textContent = 'Add Administrator';
+    document.getElementById('adminForm').reset();
+    document.getElementById('adminFormId').value = '';
+    document.getElementById('adminPasswordGroup').style.display = 'block';
+    document.getElementById('adminConfirmGroup').style.display  = 'block';
+    document.getElementById('adminFormPassword').required = true;
+    document.getElementById('adminFormConfirm').required  = true;
+    openModal('adminModal');
+}
+
+async function openEditAdmin(id) {
+    try {
+        const a = await apiJSON('GET', '/api/admin/admins/' + id);
+        document.getElementById('adminModalTitle').textContent = 'Edit Administrator';
+        document.getElementById('adminFormId').value     = a.id;
+        document.getElementById('adminFormName').value   = a.name;
+        document.getElementById('adminFormEmail').value  = a.email;
+        document.getElementById('adminFormRole').value   = a.role;
+        document.getElementById('adminFormStatus').value = a.status;
+        document.getElementById('adminFormPassword').value = '';
+        document.getElementById('adminFormConfirm').value  = '';
+        document.getElementById('adminPasswordGroup').style.display = 'none';
+        document.getElementById('adminConfirmGroup').style.display  = 'none';
+        document.getElementById('adminFormPassword').required = false;
+        document.getElementById('adminFormConfirm').required  = false;
+        openModal('adminModal');
+    } catch(e) { showToast('Failed to load admin', 'error'); }
+}
+
+async function submitAdmin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('adminSubmitBtn');
+    const id  = document.getElementById('adminFormId').value;
+    btn.textContent = 'Saving...'; btn.disabled = true;
+
+    const pwd     = document.getElementById('adminFormPassword').value;
+    const confirm = document.getElementById('adminFormConfirm').value;
+    if (!id && pwd !== confirm) {
+        showToast('Passwords do not match', 'error');
+        btn.textContent = 'Save Admin'; btn.disabled = false;
+        return;
+    }
+
+    try {
+        const body = {
+            name:             document.getElementById('adminFormName').value,
+            email:            document.getElementById('adminFormEmail').value,
+            role:             document.getElementById('adminFormRole').value,
+            status:           document.getElementById('adminFormStatus').value,
+            password:         pwd,
+            confirm_password: confirm
+        };
+        if (id) await apiJSON('PUT', '/api/admin/admins/' + id, body);
+        else    await apiJSON('POST', '/api/admin/admins', body);
+        closeModal('adminModal');
+        showToast('Administrator ' + (id ? 'updated' : 'created'), 'success');
+        loadAdmins();
+    } catch(e) {
+        showToast('Failed: ' + e.message, 'error');
+    } finally {
+        btn.textContent = 'Save Admin'; btn.disabled = false;
+    }
+}
+
+async function toggleAdminStatus(id, status) {
+    const action = status === 'DISABLED' ? 'disable' : 'enable';
+    confirmAction('Confirm Action', `Are you sure you want to ${action} this administrator?`, async () => {
+        try {
+            await apiJSON('PATCH', '/api/admin/admins/' + id + '/status', { status });
+            showToast(`Administrator ${action}d`, 'success');
+            loadAdmins();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+}
+
+let _resetPasswordAdminId = null;
+function openResetPassword(id) {
+    _resetPasswordAdminId = id;
+    document.getElementById('cpNewPassword').value    = '';
+    document.getElementById('cpConfirmPassword').value = '';
+    openModal('changePasswordModal');
+}
+
+async function submitChangePassword() {
+    const pwd     = document.getElementById('cpNewPassword').value;
+    const confirm = document.getElementById('cpConfirmPassword').value;
+    if (!pwd || pwd.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
+    if (pwd !== confirm) { showToast('Passwords do not match', 'error'); return; }
+
+    try {
+        const id = _resetPasswordAdminId || (await apiJSON('GET', '/api/admin/auth/me')).id;
+        await apiJSON('POST', '/api/admin/admins/' + id + '/reset-password', { new_password: pwd, confirm_password: confirm });
+        closeModal('changePasswordModal');
+        showToast('Password updated successfully', 'success');
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+function openChangePassword() {
+    _resetPasswordAdminId = null;
+    document.getElementById('cpNewPassword').value    = '';
+    document.getElementById('cpConfirmPassword').value = '';
+    openModal('changePasswordModal');
+}
+
+// ════════════════════════════════════════════════
+// SITE SETTINGS (Super Admin Only)
+// ════════════════════════════════════════════════
+async function loadSettings() {
+    try {
+        const s = await apiJSON('GET', '/api/admin/settings');
+        const keys = ['business_name','business_email','business_phone','business_whatsapp','business_address','business_hours',
+                      'instagram','facebook','youtube','google_business',
+                      'website_title','default_currency','meta_description','footer_text','copyright_text'];
+        keys.forEach(k => {
+            const el = document.getElementById('set_' + k);
+            if (el && s[k]) el.value = s[k];
+        });
+    } catch(e) { showToast('Failed to load settings', 'error'); }
+}
+
+async function saveSettings() {
+    const keys = ['business_name','business_email','business_phone','business_whatsapp','business_address','business_hours',
+                  'instagram','facebook','youtube','google_business',
+                  'website_title','default_currency','meta_description','footer_text','copyright_text'];
+    const body = {};
+    keys.forEach(k => {
+        const el = document.getElementById('set_' + k);
+        if (el) body[k] = el.value;
+    });
+    try {
+        await apiJSON('PUT', '/api/admin/settings', body);
+        showToast('Settings saved successfully', 'success');
+    } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
+// ACCESS LOGS (Super Admin Only)
+// ════════════════════════════════════════════════
+let logsPage = 1;
+async function loadLogs(page) {
+    if (page) logsPage = page;
+    const search  = document.getElementById('logsSearch')?.value  || '';
+    const action  = document.getElementById('logsActionFilter')?.value || '';
+    const status  = document.getElementById('logsStatusFilter')?.value || '';
+    const from    = document.getElementById('logsDateFrom')?.value || '';
+    const to      = document.getElementById('logsDateTo')?.value   || '';
+    const tbody   = document.getElementById('logsTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="state-loading">Loading...</td></tr>';
+
+    // Load action options if empty
+    const actionSel = document.getElementById('logsActionFilter');
+    if (actionSel && actionSel.options.length <= 1) {
+        try {
+            const actions = await apiJSON('GET', '/api/admin/logs/actions');
+            actions.forEach(a => { const opt = document.createElement('option'); opt.value = a; opt.textContent = a; actionSel.appendChild(opt); });
+        } catch(e) {}
+    }
+
+    try {
+        const params = new URLSearchParams({ page: logsPage, limit: 50, search, action, status, dateFrom: from, dateTo: to });
+        const data   = await apiJSON('GET', '/api/admin/logs?' + params);
+
+        if (!data.logs.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="state-empty">No access logs found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.logs.map(l => `
+                <tr>
+                    <td style="font-size:0.75rem;">${fmtDateTime(l.created_at)}</td>
+                    <td style="font-size:0.8rem;">${l.admin_email || '—'}</td>
+                    <td style="font-size:0.78rem;font-family:monospace;">${l.action}</td>
+                    <td style="font-size:0.75rem;">${l.module}</td>
+                    <td style="font-size:0.72rem;color:var(--muted);">${l.ip_address || '—'}</td>
+                    <td>${statusBadge(l.status)}</td>
+                </tr>`).join('');
+        }
+        renderPagination('logsPagination', data.page, data.pages, data.total, data.limit, loadLogs);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="state-error">Failed to load logs.</td></tr>`;
+    }
+}
+</script>
+</body>
+</html>

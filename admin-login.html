@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — THE 22KT GOLD</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C59A3F;
+            --gold-light: #E8C97A;
+            --dark: #FAF8F5;
+            --surface: #FFFFFF;
+            --border: rgba(197,154,63,0.25);
+            --text: #2C2A29;
+            --muted: #5C5856;
+            --danger: #EF4444;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--dark);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text);
+        }
+        .admin-wrap { width: 100%; max-width: 420px; padding: 1rem; }
+        .admin-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1), 0 0 0 1px rgba(197,154,63,0.08);
+            padding: 3rem 2.5rem 2.5rem;
+        }
+        .admin-brand { text-align: center; margin-bottom: 2rem; }
+        .admin-shield {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin: 0 auto 1rem;
+            box-shadow: 0 8px 24px rgba(197,154,63,0.3);
+        }
+        .admin-title { font-size: 1.4rem; font-weight: 700; color: #161413; letter-spacing: 1px; margin-bottom: 0.25rem; }
+        .admin-sub { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+        .admin-badge {
+            display: inline-block; background: rgba(197,154,63,0.12);
+            border: 1px solid var(--border); color: var(--gold);
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.5px; padding: 0.2rem 0.65rem; margin-bottom: 1.5rem;
+        }
+        .form-group { margin-bottom: 1.2rem; }
+        label {
+            display: block; font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--muted); margin-bottom: 0.4rem;
+        }
+        input {
+            width: 100%; padding: 0.85rem 1rem;
+            background: #fff; border: 1.5px solid rgba(0,0,0,0.1);
+            color: var(--text); font-family: 'DM Sans', sans-serif;
+            font-size: 0.93rem; outline: none; transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--gold); }
+        input::placeholder { color: var(--muted); }
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 3rem; }
+        .eye-btn {
+            position: absolute; right: 0.9rem; top: 50%;
+            transform: translateY(-50%); background: none;
+            border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0;
+        }
+        .error-msg {
+            background: rgba(224,82,82,0.12); border: 1px solid rgba(224,82,82,0.3);
+            color: var(--danger); font-size: 0.8rem; padding: 0.7rem 1rem;
+            margin-bottom: 1rem; display: none;
+        }
+        .btn-admin {
+            width: 100%; padding: 1rem;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #fff; border: none; font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.5px; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn-admin:hover { opacity: 0.9; }
+        .btn-admin:active { transform: scale(0.98); }
+        .btn-admin:disabled { opacity: 0.6; cursor: not-allowed; }
+        .admin-footer { margin-top: 1.5rem; text-align: center; font-size: 0.72rem; color: var(--muted); }
+        .admin-footer a { color: var(--gold); text-decoration: none; }
+        .superadmin-link {
+            display: block; margin-top: 0.8rem;
+            font-size: 0.68rem; color: var(--muted); text-align: center;
+        }
+        .superadmin-link a { color: var(--muted); text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="admin-wrap">
+        <div class="admin-card">
+            <div class="admin-brand">
+                <div class="admin-shield">🔐</div>
+                <div class="admin-title">Admin Portal</div>
+                <div class="admin-sub">THE 22KT GOLD — Restricted Access</div>
+                <br>
+                <span class="admin-badge">Admin Only</span>
+            </div>
+
+            <div class="error-msg" id="errorMsg">⚠ Invalid credentials. Please try again.</div>
+
+            <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" autocomplete="off">
+                <div class="form-group">
+                    <label for="adminUser">Admin Email</label>
+                    <input type="email" id="adminUser" placeholder="22ktgold@veershah.com" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="adminPass">Password</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="adminPass" placeholder="Enter admin password" required autocomplete="new-password">
+                        <button type="button" class="eye-btn" onclick="toggleAdminPwd()">👁</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-admin" id="loginBtn">Access Admin Panel →</button>
+            </form>
+
+            <div class="admin-footer">
+                <p>Unauthorized access is strictly prohibited and monitored.</p>
+                <br>
+                <a href="index.html">← Back to Website</a>
+            </div>
+            <div class="superadmin-link">
+                Super Admin? <a href="super-admin.html">Use Developer Console →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000'))
+            ? 'http://localhost:3000'
+            : '';
+
+        // If already logged in, redirect
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            // Verify token is still valid
+            fetch(API_BASE + '/api/admin/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(r => {
+                if (r.ok) window.location.href = 'admin-dashboard.html';
+                else localStorage.removeItem('adminToken');
+            }).catch(() => {});
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const btn      = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            const email    = document.getElementById('adminUser').value.trim();
+            const password = document.getElementById('adminPass').value;
+
+            btn.textContent = 'Authenticating...';
+            btn.disabled    = true;
+            errorMsg.style.display = 'none';
+
+            try {
+                const res  = await fetch(API_BASE + '/api/admin/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminRole',  data.admin.role);
+                    localStorage.setItem('adminName',  data.admin.name);
+                    localStorage.setItem('adminEmail', data.admin.email);
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    errorMsg.textContent   = '⚠ ' + (data.error || 'Invalid credentials');
+                    errorMsg.style.display = 'block';
+                    document.getElementById('adminPass').value = '';
+                    btn.textContent = 'Access Admin Panel →';
+                    btn.disabled    = false;
+                }
+            } catch (err) {
+                errorMsg.textContent   = '⚠ Server error. Make sure python server.py is running on http://localhost:3000.';
+                errorMsg.style.display = 'block';
+                btn.textContent = 'Access Admin Panel →';
+                btn.disabled    = false;
+            }
+        }
+
+        function toggleAdminPwd() {
+            const input = document.getElementById('adminPass');
+            input.type  = input.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+</body>
+</html>

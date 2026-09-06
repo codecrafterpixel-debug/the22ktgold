@@ -1,0 +1,38 @@
+[
+  {
+    "id": "prod_1",
+    "title": "Heritage Gold Ring",
+    "description": "Intricately hand-crafted 22KT gold ring with fine filigree detailing.",
+    "category": "Rings",
+    "weight": 4.2,
+    "purity": 22,
+    "image": "images/cat-rings.jpg"
+  },
+  {
+    "id": "prod_2",
+    "title": "Royal Bridal Necklace",
+    "description": "Traditional bridal masterpiece handcrafted for your grand wedding celebrations.",
+    "category": "Necklaces",
+    "weight": 48.5,
+    "purity": 22,
+    "image": "images/cat-necklaces.jpg"
+  },
+  {
+    "id": "prod_3",
+    "title": "Temple Gold Bangles",
+    "description": "Timeless antique finished 22KT bangles and kadas crafted to perfection.",
+    "category": "Bangles",
+    "weight": 32.0,
+    "purity": 22,
+    "image": "images/cat-bangles.jpg"
+  },
+  {
+    "id": "prod_4",
+    "title": "Classic Men's Chain",
+    "description": "Durable and elegant 22KT machine-cut & hand-linked gold chain.",
+    "category": "Men's Gold",
+    "weight": 18.3,
+    "purity": 22,
+    "image": "images/cat-mens.jpg"
+  }
+]

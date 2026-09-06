@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Login — THE 22KT GOLD</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #070709; --surface: #0E0E12; --surface2: #16161C;
+            --border: rgba(122,100,255,0.2); --accent: #7A64FF; --accent2: #A78BFA;
+            --gold: #C59A3F; --text: #E2E0FF; --muted: #5C5A7A;
+            --danger: #FF5F7E; --green: #4ADE80;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif; background: var(--bg);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            color: var(--text); position: relative; overflow: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(122,100,255,0.04) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(122,100,255,0.04) 1px, transparent 1px);
+            background-size: 40px 40px; animation: gridMove 20s linear infinite; pointer-events: none;
+        }
+        @keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:40px 40px;} }
+
+        .super-wrap { position: relative; z-index: 2; width: 100%; max-width: 460px; padding: 1rem; }
+        .super-card {
+            background: var(--surface); border: 1px solid var(--border);
+            box-shadow: 0 0 0 1px rgba(122,100,255,0.05), 0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(122,100,255,0.1);
+            padding: 3rem 2.5rem 2.5rem;
+        }
+        .super-header { text-align: center; margin-bottom: 2.2rem; }
+        .super-icon {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin: 0 auto 1rem;
+            box-shadow: 0 0 40px rgba(122,100,255,0.4); animation: pulseSA 2.5s infinite;
+        }
+        @keyframes pulseSA { 0%,100%{box-shadow:0 0 30px rgba(122,100,255,0.4);} 50%{box-shadow:0 0 60px rgba(122,100,255,0.7);} }
+        .super-title { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; color: var(--accent2); letter-spacing: 1px; margin-bottom: 0.3rem; }
+        .super-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+        .clearance-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: rgba(122,100,255,0.1); border: 1px solid var(--border);
+            color: var(--accent2); font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px; padding: 0.25rem 0.8rem; margin-top: 0.8rem;
+        }
+        .dot-live { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+        .terminal-line { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .terminal-line::before { content: '$ '; color: var(--green); }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 1px; }
+        input {
+            width: 100%; padding: 0.85rem 1rem; background: var(--surface2);
+            border: 1.5px solid rgba(122,100,255,0.15); color: var(--text);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(122,100,255,0.12); }
+        input::placeholder { color: var(--muted); }
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 3.2rem; }
+        .eye-btn { position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; }
+        .error-msg {
+            background: rgba(255,95,126,0.1); border: 1px solid rgba(255,95,126,0.3); color: var(--danger);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.7rem 1rem; margin-bottom: 1rem; display: none;
+        }
+        .btn-super {
+            width: 100%; padding: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 600; letter-spacing: 1px;
+            cursor: pointer; text-transform: uppercase; transition: opacity 0.2s, transform 0.1s;
+            box-shadow: 0 4px 20px rgba(122,100,255,0.3);
+        }
+        .btn-super:hover { opacity: 0.9; }
+        .btn-super:active { transform: scale(0.98); }
+        .btn-super:disabled { opacity: 0.6; cursor: not-allowed; }
+        .super-footer { margin-top: 1.5rem; text-align: center; }
+        .super-footer p { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+        .super-footer a { color: var(--accent2); text-decoration: none; }
+        .access-level { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .level-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; padding: 0.2rem 0.5rem; background: rgba(122,100,255,0.1); border: 1px solid var(--border); color: var(--accent2); }
+        .level-tag.gold-tag { background: rgba(197,154,63,0.1); border-color: rgba(197,154,63,0.25); color: var(--gold); }
+    </style>
+</head>
+<body>
+    <div class="super-wrap">
+        <div class="super-card">
+            <div class="super-header">
+                <div class="super-icon">⚡</div>
+                <div class="super-title">DEVELOPER CONSOLE</div>
+                <div class="super-subtitle">THE 22KT GOLD — Super Admin</div>
+                <div class="clearance-badge">
+                    <span class="dot-live"></span>
+                    CLEARANCE LEVEL: SUPER ADMIN
+                </div>
+            </div>
+
+            <div class="terminal-line">authenticate --role=superadmin --scope=full</div>
+
+            <div class="access-level">
+                <span class="level-tag">FULL SYSTEM ACCESS</span>
+                <span class="level-tag">USER MANAGEMENT</span>
+                <span class="level-tag gold-tag">ADMIN MANAGEMENT</span>
+                <span class="level-tag">SITE CONFIGURATION</span>
+            </div>
+
+            <div class="error-msg" id="superErrorMsg">⚠ Authentication failed. This attempt has been logged.</div>
+
+            <form id="superLoginForm" onsubmit="handleSuperLogin(event)" autocomplete="off">
+                <div class="form-group">
+                    <label>// DEVELOPER ID</label>
+                    <input type="email" id="superUser" placeholder="22ktgold@yashpanchal.com" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>// MASTER KEY</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="superPass" placeholder="••••••••••••••••" required autocomplete="new-password">
+                        <button type="button" class="eye-btn" onclick="toggleSuperPwd()">👁</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-super" id="superLoginBtn">AUTHENTICATE &amp; ENTER →</button>
+            </form>
+
+            <div class="super-footer">
+                <p>All access attempts are logged and monitored. Unauthorized access is a criminal offense.</p>
+                <br>
+                <a href="admin-login.html">Admin Login ↗</a> &nbsp;|&nbsp;
+                <a href="index.html">← Public Site</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000'))
+            ? 'http://localhost:3000'
+            : '';
+
+        // If already logged in as super admin, redirect
+        const token = localStorage.getItem('adminToken');
+        const role  = localStorage.getItem('adminRole');
+        if (token && role === 'SUPER_ADMIN') {
+            fetch(API_BASE + '/api/admin/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+                .then(r => { if (r.ok) window.location.href = 'admin-dashboard.html'; })
+                .catch(() => {});
+        }
+
+        async function handleSuperLogin(e) {
+            e.preventDefault();
+            const btn      = document.getElementById('superLoginBtn');
+            const errorMsg = document.getElementById('superErrorMsg');
+            const email    = document.getElementById('superUser').value.trim();
+            const password = document.getElementById('superPass').value;
+
+            btn.textContent = 'AUTHENTICATING...';
+            btn.disabled    = true;
+            errorMsg.style.display = 'none';
+
+            try {
+                const res  = await fetch(API_BASE + '/api/admin/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    if (data.admin.role !== 'SUPER_ADMIN') {
+                        errorMsg.textContent   = '⚠ This console requires Super Admin access. Use the regular Admin Login instead.';
+                        errorMsg.style.display = 'block';
+                        btn.textContent = 'AUTHENTICATE & ENTER →';
+                        btn.disabled    = false;
+                        return;
+                    }
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminRole',  data.admin.role);
+                    localStorage.setItem('adminName',  data.admin.name);
+                    localStorage.setItem('adminEmail', data.admin.email);
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    errorMsg.textContent   = '⚠ ' + (data.error || 'Authentication failed. This attempt has been logged.');
+                    errorMsg.style.display = 'block';
+                    document.getElementById('superPass').value = '';
+                    btn.textContent = 'AUTHENTICATE & ENTER →';
+                    btn.disabled    = false;
+                }
+            } catch (err) {
+                errorMsg.textContent   = '⚠ Server error. Please try again.';
+                errorMsg.style.display = 'block';
+                btn.textContent = 'AUTHENTICATE & ENTER →';
+                btn.disabled    = false;
+            }
+        }
+
+        function toggleSuperPwd() {
+            const input = document.getElementById('superPass');
+            input.type  = input.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+</body>
+</html>

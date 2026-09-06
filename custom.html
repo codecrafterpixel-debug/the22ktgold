@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Jewellery | THE 22KT GOLD</title>
+    <meta name="description" content="Your Design. Our Craftsmanship. 22KT Gold. Share your reference, weight, budget and details to get a custom 22KT gold jewellery manufactured in Ahmedabad.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .custom-form-wrapper {
+            background-color: var(--clr-pearl-white);
+            border: 1px solid var(--clr-border);
+            padding: 3.5rem;
+        }
+        .custom-form-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .custom-form-subtitle {
+            color: var(--clr-text-light);
+            font-size: 0.9rem;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--clr-border);
+        }
+        .form-section-title {
+            font-family: var(--font-body);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--clr-antique-gold);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .custom-form-wrapper { padding: 2rem; }
+        }
+        .file-upload-label {
+            display: block;
+            border: 1px dashed var(--clr-border);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-medium);
+            color: var(--clr-text-light);
+            font-size: 0.85rem;
+        }
+        .file-upload-label:hover {
+            border-color: var(--clr-antique-gold);
+            color: var(--clr-antique-gold);
+        }
+        .file-upload-label input[type="file"] {
+            display: none;
+        }
+        .file-upload-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        #file-name-display {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--clr-antique-gold);
+        }
+        .custom-info-sidebar {
+            padding-top: 5rem;
+        }
+        .info-card {
+            background: var(--clr-off-white);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border-left: 3px solid var(--clr-antique-gold);
+        }
+        .info-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .info-card p, .info-card li {
+            color: var(--clr-text-light);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        .info-card ul {
+            list-style: disc;
+            margin-left: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Announcement Bar -->
+    <div class="announcement">
+        <div class="marquee-content">
+            <span>✨ 22KT Gold Jewellery • Direct From Manufacturing • Manek Chowk, Ahmedabad • Transparent Making Charges • Custom Orders Welcome ✨</span>
+            <span>✨ 22KT Gold Jewellery • Direct From Manufacturing • Manek Chowk, Ahmedabad • Transparent Making Charges • Custom Orders Welcome ✨</span>
+        </div>
+    </div>
+
+    <!-- Live Gold Rate Ticker Bar -->
+    <div class="gold-rate-bar">
+        <div class="container gold-rate-ticker-inner">
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+                <span class="rate-live-tag">
+                    <span class="live-pulse-dot"></span>
+                    Live Market Rate
+                </span>
+                <span style="color: var(--clr-gold-light); font-weight: 500; font-size: 0.72rem;">Ahmedabad Bullion</span>
+            </div>
+            <div class="rate-ticker-items">
+                <div class="rate-ticker-item">
+                    <span class="rate-karat">22KT (916):</span>
+                    <span class="rate-price" id="ticker_22k_val">Fetching...</span>
+                    <span class="rate-change-up" id="ticker_22k_chg">--</span>
+                </div>
+                <div class="rate-ticker-item">
+                    <span class="rate-karat">24KT (999):</span>
+                    <span class="rate-price" id="ticker_24k_val">Fetching...</span>
+                    <span class="rate-change-up" id="ticker_24k_chg">--</span>
+                </div>
+                <div class="rate-ticker-item">
+                    <span class="rate-karat">18KT (750):</span>
+                    <span class="rate-price" id="ticker_18k_val">Fetching...</span>
+                    <span class="rate-change-up" id="ticker_18k_chg">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Brand Strip -->
+    <div class="header-brand-strip">
+        <div class="container brand-strip-inner">
+            <div class="brand-tagline">Crafted in 22KT • Made for You</div>
+            <a href="index.html" class="brand-logo-main">THE <span>22KT</span> GOLD</a>
+            <div class="brand-since">Manek Chowk, Ahmedabad</div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Home</a>
+                <a href="about.html">About Us</a>
+                <a href="collections.html">Collections</a>
+                <a href="custom.html" class="active">Custom Jewellery</a>
+                <a href="b2b.html">For Retail Jewellers</a>
+                <a href="gallery.html">Gallery</a>
+                <a href="contact.html">Contact Us</a>
+            </div>
+            <div class="nav-actions">
+                <a href="tel:+919429616414" class="nav-call">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
+                    Call Us
+                </a>
+                <a href="https://wa.me/919429616414" target="_blank" class="nav-wa">
+                    <svg width="14" height="14" viewBox="0 0 448 512" fill="currentColor"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zM223.9 413.6c-33.1 0-65.5-8.9-94-25.8l-6.7-4-69.8 18.3L72 334.1l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3s19.9 53.7 22.6 57.4c2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+                    WhatsApp
+                </a>
+            </div>
+            <button class="hamburger" aria-label="Toggle Menu" id="mobileMenuBtn">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/919429616414" target="_blank" class="floating-wa" aria-label="Chat on WhatsApp">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zM223.9 413.6c-33.1 0-65.5-8.9-94-25.8l-6.7-4-69.8 18.3L72 334.1l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3s19.9 53.7 22.6 57.4c2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path></svg>
+    </a>
+
+    <!-- Page Hero -->
+    <header class="page-hero fade-up">
+        <div class="container">
+            <span class="eyebrow">BESPOKE CREATIONS</span>
+            <h1 class="page-hero-title">Your Design. Our Craftsmanship. 22KT Gold.</h1>
+            <p class="page-hero-desc">Share your complete details, reference images, and requirements. Our manufacturing team will revert with a transparent quotation.</p>
+        </div>
+    </header>
+
+    <!-- Main Section -->
+    <section class="section">
+        <div class="container fade-up" style="display: grid; grid-template-columns: 1fr 2fr; gap: 5rem; align-items: start;">
+
+            <!-- Left Info Sidebar -->
+            <div class="custom-info-sidebar">
+                <div class="info-card">
+                    <h4>What We Can Make</h4>
+                    <ul>
+                        <li>Gold Rings (All styles)</li>
+                        <li>Necklaces & Chains</li>
+                        <li>Bangles & Kadas</li>
+                        <li>Earrings & Jhumkas</li>
+                        <li>Mangalsutra</li>
+                        <li>Bridal Sets</li>
+                        <li>Pendants & Sets</li>
+                        <li>Men's Jewellery</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h4>Reference Sources Accepted</h4>
+                    <ul>
+                        <li>Your own photos/sketches</li>
+                        <li>Instagram references</li>
+                        <li>Pinterest links</li>
+                        <li>Existing jewellery photos</li>
+                        <li>Any image/screenshot</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h4>Manufacturing Time</h4>
+                    <p>Typical custom order: <strong>7–15 working days</strong> depending on complexity and design.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Questions?</h4>
+                    <p>Call or WhatsApp directly:</p>
+                    <p style="margin-top: 0.5rem;"><a href="tel:+919429616414" style="color: var(--clr-antique-gold); font-size: 1rem;">+91 94296 16414</a></p>
+                </div>
+            </div>
+
+            <!-- Right: Full Detail Form -->
+            <div class="custom-form-wrapper">
+                <h3 class="custom-form-title">Custom Jewellery Enquiry</h3>
+                <p class="custom-form-subtitle">Fill in all details below. The more information you provide, the more accurate your quotation will be.</p>
+
+                <form id="customJewelleryForm" novalidate>
+
+                    <!-- Personal Details -->
+                    <span class="form-section-title">01 — Personal Details</span>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="c_name">Full Name *</label>
+                            <input type="text" id="c_name" class="form-input" placeholder="e.g. Priya Shah" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="c_phone">Phone / WhatsApp Number *</label>
+                            <input type="tel" id="c_phone" class="form-input" placeholder="+91 XXXXX XXXXX" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="c_address">Address / City *</label>
+                        <input type="text" id="c_address" class="form-input" placeholder="e.g. Navrangpura, Ahmedabad, Gujarat" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="c_email">Email Address (Optional)</label>
+                        <input type="email" id="c_email" class="form-input" placeholder="e.g. priya@email.com">
+                    </div>
+
+                    <!-- Jewellery Details -->
+                    <span class="form-section-title" style="margin-top: 2rem;">02 — Jewellery Details</span>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="c_type">Jewellery Type *</label>
+                            <select id="c_type" class="form-select" required>
+                                <option value="">Select Type</option>
+                                <option>Gold Ring</option>
+                                <option>Gold Necklace</option>
+                                <option>Gold Chain</option>
+                                <option>Gold Earrings / Jhumkas</option>
+                                <option>Gold Bangles</option>
+                                <option>Gold Kada</option>
+                                <option>Gold Bracelet</option>
+                                <option>Mangalsutra</option>
+                                <option>Gold Pendant / Pendant Set</option>
+                                <option>Bridal Jewellery Set</option>
+                                <option>Rani Haar</option>
+                                <option>Men's Chain</option>
+                                <option>Men's Ring</option>
+                                <option>Men's Kada</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="c_occasion">Occasion</label>
+                            <select id="c_occasion" class="form-select">
+                                <option value="">Select Occasion</option>
+                                <option>Wedding / Bridal</option>
+                                <option>Engagement</option>
+                                <option>Festival / Puja</option>
+                                <option>Daily Wear</option>
+                                <option>Gift</option>
+                                <option>Investment</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="c_weight">Approximate Gold Weight (in grams)</label>
+                            <input type="text" id="c_weight" class="form-input" placeholder="e.g. 8–10 grams or Not sure">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="c_size">Size / Dimensions</label>
+                            <input type="text" id="c_size" class="form-input" placeholder="e.g. Ring size 16, Bangle size 2.6">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="c_finish">Preferred Finish</label>
+                            <select id="c_finish" class="form-select">
+                                <option value="">Select Finish</option>
+                                <option>High Polish (Shiny)</option>
+                                <option>Antique / Oxidised</option>
+                                <option>Matte Finish</option>
+                                <option>Rhodium Plated</option>
+                                <option>Not Sure</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="c_budget">Approximate Budget</label>
+                            <input type="text" id="c_budget" class="form-input" placeholder="e.g. ₹30,000 – ₹50,000">
+                        </div>
+                    </div>
+
+                    <!-- Reference Image -->
+                    <span class="form-section-title" style="margin-top: 2rem;">03 — Reference Image</span>
+                    <div class="form-group">
+                        <label class="file-upload-label" for="c_image">
+                            <span class="file-upload-icon" style="display: block; margin-bottom: 0.6rem;">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--clr-gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </span>
+                            Click to upload your reference image, sketch, or inspiration photo<br>
+                            <small style="opacity:0.6;">(JPG, PNG, WEBP — Max 5MB. You can also send via WhatsApp after submitting.)</small>
+                            <input type="file" id="c_image" accept="image/*" onchange="showFileName(this)">
+                        </label>
+                        <p id="file-name-display"></p>
+                    </div>
+
+                    <!-- Description -->
+                    <span class="form-section-title" style="margin-top: 2rem;">04 — Requirement Description</span>
+                    <div class="form-group">
+                        <label class="form-label" for="c_desc">Describe your jewellery requirement in detail *</label>
+                        <textarea id="c_desc" class="form-textarea" rows="5" placeholder="e.g. I want a traditional Rajasthani-style gold necklace with meenakari work. Prefer antique finish. Approximate weight 20–25 grams. For my daughter's wedding in November." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="c_reference_link">Reference Link (Instagram / Pinterest / Website)</label>
+                        <input type="url" id="c_reference_link" class="form-input" placeholder="e.g. https://www.instagram.com/p/...">
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="button" class="btn btn-gold" style="width: 100%; padding: 1.3rem; font-size: 0.9rem;" onclick="submitCustomForm()">
+                        Send Enquiry on WhatsApp &rarr;
+                    </button>
+                    <p style="text-align:center; margin-top: 1rem; font-size: 0.8rem; color: var(--clr-text-muted);">
+                        This will open WhatsApp with all your details pre-filled. You can also attach your reference image directly in WhatsApp.
+                    </p>
+
+                </form>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <a href="index.html" class="footer-logo">THE <span>22KT</span> GOLD</a>
+                    <p class="footer-desc">Premium 22KT gold jewellery manufacturing brand located in Manek Chowk, Ahmedabad. Genuine craftsmanship, transparent pricing, and order-based bespoke jewellery.</p>
+                </div>
+                <div>
+                    <h4 class="footer-heading">Collections</h4>
+                    <ul class="footer-links">
+                        <li><a href="collections.html">Gold Rings</a></li>
+                        <li><a href="collections.html">Bridal Necklaces</a></li>
+                        <li><a href="collections.html">Temple Bangles</a></li>
+                        <li><a href="collections.html">Gold Chains</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="footer-heading">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="custom.html">Custom Jewellery</a></li>
+                        <li><a href="b2b.html">For Retailers (B2B)</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4 class="footer-heading">Workshop & Contact</h4>
+                    <p>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        Manek Chowk, Ahmedabad, Gujarat
+                    </p>
+                    <p style="margin-top: 1rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <a href="tel:+919429616414" style="color: #fff; font-weight: 700;">+91 94296 16414</a>
+                    </p>
+                    <p>
+                        <svg width="18" height="18" viewBox="0 0 448 512" fill="currentColor"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zM223.9 413.6c-33.1 0-65.5-8.9-94-25.8l-6.7-4-69.8 18.3L72 334.1l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3s19.9 53.7 22.6 57.4c2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"></path></svg>
+                        <a href="https://wa.me/919429616414" target="_blank" style="color: var(--clr-gold-light); font-weight: 600;">Chat on WhatsApp</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; 2026 THE 22KT GOLD. All rights reserved. • 22KT Gold Jewellery, Direct From Manufacturing.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        function showFileName(input) {
+            const display = document.getElementById('file-name-display');
+            if (input.files && input.files[0]) {
+                display.textContent = '✓ Selected: ' + input.files[0].name;
+            }
+        }
+
+        function submitCustomForm() {
+            const name     = document.getElementById('c_name').value.trim();
+            const phone    = document.getElementById('c_phone').value.trim();
+            const address  = document.getElementById('c_address').value.trim();
+            const email    = document.getElementById('c_email').value.trim();
+            const type     = document.getElementById('c_type').value;
+            const occasion = document.getElementById('c_occasion').value;
+            const weight   = document.getElementById('c_weight').value.trim();
+            const size     = document.getElementById('c_size').value.trim();
+            const finish   = document.getElementById('c_finish').value;
+            const budget   = document.getElementById('c_budget').value.trim();
+            const desc     = document.getElementById('c_desc').value.trim();
+            const refLink  = document.getElementById('c_reference_link').value.trim();
+            const fileInput = document.getElementById('c_image');
+            const hasFile = fileInput.files && fileInput.files[0];
+
+            if (!name || !phone || !address || !type || !desc) {
+                alert('Please fill in all required fields (marked with *).');
+                return;
+            }
+
+            const message =
+`Hi THE 22KT GOLD, I have a custom jewellery enquiry. Please find my complete details below:
+
+*━━ PERSONAL DETAILS ━━*
+*Name:* ${name}
+*Phone/WhatsApp:* ${phone}
+*Address/City:* ${address}
+*Email:* ${email || 'Not provided'}
+
+*━━ JEWELLERY DETAILS ━━*
+*Jewellery Type:* ${type}
+*Occasion:* ${occasion || 'Not specified'}
+*Approximate Weight:* ${weight || 'Not specified'}
+*Size/Dimensions:* ${size || 'Not specified'}
+*Preferred Finish:* ${finish || 'Not specified'}
+*Approximate Budget:* ${budget || 'Not specified'}
+
+*━━ REQUIREMENT ━━*
+${desc}
+
+*Reference Link:* ${refLink || 'None'}
+*Reference Image:* ${hasFile ? 'Yes – I will attach it in this WhatsApp chat.' : 'None attached'}
+
+Please share quotation, gold weight details, and making charges. Thank you!`;
+
+            window.open(`https://wa.me/919429616414?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // Responsive sidebar: hide on small screens
+        if (window.innerWidth < 992) {
+            const sidebar = document.querySelector('.custom-info-sidebar');
+            if (sidebar) sidebar.style.display = 'none';
+            document.querySelector('.container.fade-up').style.gridTemplateColumns = '1fr';
+        }
+    </script>
+</body>
+</html>
