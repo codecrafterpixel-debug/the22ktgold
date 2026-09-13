@@ -37,6 +37,10 @@ PGUSER = os.environ.get("PGUSER", "postgres")
 PGPASSWORD = os.environ.get("PGPASSWORD", "")
 PGSSLMODE = os.environ.get("PGSSLMODE", "prefer")
 
+# Backward-compatible placeholder used by the root launcher.
+# PostgreSQL is server-based, so there is no local DB file path.
+DB_PATH = None
+
 UPLOADS_DIR = BASE_DIR / "uploads"
 IMAGES_DIR = BASE_DIR / "images"
 try:
