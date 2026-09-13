@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-backend/server.py — THE 22KT GOLD | Python Flask & SQLite Backend Server
+backend/server.py — THE 22KT GOLD | Python Flask & PostgreSQL Backend Server
 Provides full API endpoints for Admin Dashboard, Public APIs, Gold Rates, Authentication,
-and Static Web Hosting with a self-contained SQLite database.
+and Static Web Hosting with a PostgreSQL database.
 """
 
 import os
@@ -11,7 +11,8 @@ import sys
 import time
 import json
 import base64
-import sqlite3
+import psycopg2
+from psycopg2.extras import DictCursor
 import datetime
 from functools import wraps
 from pathlib import Path
@@ -23,309 +24,232 @@ import bcrypt
 import requests
 
 # ── Paths & Setup ──
-import shutil
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-if os.environ.get("VERCEL"):
-    DB_PATH = Path("/tmp/the22ktgold.db")
-    if not DB_PATH.exists():
-        src_db = BASE_DIR / "the22ktgold.db"
-        if src_db.exists():
-            shutil.copyfile(src_db, DB_PATH)
-    UPLOADS_DIR = Path("/tmp/uploads")
-    IMAGES_DIR = Path("/tmp/images")
-else:
-    DB_PATH = BASE_DIR / "the22ktgold.db"
-    UPLOADS_DIR = BASE_DIR / "uploads"
-    IMAGES_DIR = BASE_DIR / "images"
+# PostgreSQL configuration. Prefer DATABASE_URL in production; local development
+# can use the PG* environment variables or the defaults below.
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+PGHOST = os.environ.get("PGHOST", "127.0.0.1")
+PGPORT = int(os.environ.get("PGPORT", "5432"))
+PGDATABASE = os.environ.get("PGDATABASE", "the22ktgold")
+PGUSER = os.environ.get("PGUSER", "postgres")
+PGPASSWORD = os.environ.get("PGPASSWORD", "")
+PGSSLMODE = os.environ.get("PGSSLMODE", "prefer")
 
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR = BASE_DIR / "uploads"
+IMAGES_DIR = BASE_DIR / "images"
+try:
+    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    print(f"Error creating directories: {e}", file=sys.stderr)
 
 app = Flask(__name__, static_folder=str(BASE_DIR))
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "the22ktgold_secure_jwt_secret_key_2026")
+JWT_SECRET = os.environ.get("JWT_SECRET", "").strip()
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is required.")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRES_HOURS = 12
 
 # ── Database Connection & Initialization ──
+class PostgresCursor(DictCursor):
+    """Dict cursor with SQLite-style '?' placeholder compatibility and lastrowid."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._last_insert_id = None
+
+    @staticmethod
+    def _convert_sql(sql):
+        # The existing API uses SQLite '?' parameters. PostgreSQL/psycopg2 uses '%s'.
+        return sql.replace("?", "%s")
+
+    def execute(self, query, vars=None):
+        sql = self._convert_sql(query)
+        self._last_insert_id = None
+        normalized = sql.lstrip().upper()
+        if normalized.startswith("INSERT") and "RETURNING" not in normalized:
+            # All project INSERT targets have an integer 'id' primary key.
+            sql = sql.rstrip().rstrip(";") + " RETURNING id"
+            result = super().execute(sql, vars)
+            row = super().fetchone()
+            if row:
+                self._last_insert_id = row["id"]
+            return result
+        return super().execute(sql, vars)
+
+    def executemany(self, query, vars_list):
+        return super().executemany(self._convert_sql(query), vars_list)
+
+    @property
+    def lastrowid(self):
+        return self._last_insert_id
+
+
+class PostgresConnection:
+    """Small compatibility wrapper so the existing db.execute(...) calls keep working."""
+    def __init__(self):
+        kwargs = {"connect_timeout": 10, "cursor_factory": PostgresCursor}
+        if DATABASE_URL:
+            kwargs["dsn"] = DATABASE_URL
+        else:
+            kwargs.update({
+                "host": PGHOST,
+                "port": PGPORT,
+                "dbname": PGDATABASE,
+                "user": PGUSER,
+                "password": PGPASSWORD,
+                "sslmode": PGSSLMODE,
+            })
+        self._conn = psycopg2.connect(**kwargs)
+
+    def cursor(self):
+        return self._conn.cursor()
+
+    def execute(self, query, vars=None):
+        cur = self.cursor()
+        cur.execute(query, vars)
+        return cur
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(str(DB_PATH), timeout=20.0)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
+        g.db = PostgresConnection()
     return g.db
 
 @app.teardown_appcontext
 def close_db(error):
     db = g.pop("db", None)
     if db is not None:
-        db.close()
+        try:
+            if error:
+                db.rollback()
+        finally:
+            db.close()
+
 
 def init_db():
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    """Verify the PostgreSQL schema and seed only missing starter records."""
+    conn = PostgresConnection()
+    try:
+        cur = conn.cursor()
+        required_tables = {
+            "admins", "admin_access_logs", "site_settings", "users",
+            "categories", "products", "product_images", "orders",
+            "order_items", "gold_rates", "gold_rate_history",
+            "enquiries", "custom_orders", "gallery"
+        }
+        cur.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+        """)
+        existing = {row["table_name"] for row in cur.fetchall()}
+        missing = sorted(required_tables - existing)
+        if missing:
+            raise RuntimeError(
+                "PostgreSQL is missing required tables: " + ", ".join(missing) +
+                ". Create the project schema in pgAdmin first."
+            )
 
-    cursor.executescript("""
-    CREATE TABLE IF NOT EXISTS admins (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'ADMIN' CHECK(role IN ('ADMIN', 'SUPER_ADMIN')),
-        status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE', 'DISABLED')),
-        last_login TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+        # Seed admin accounts only when credentials are explicitly supplied through env vars.
+        cur.execute("SELECT COUNT(*) AS count FROM admins")
+        if cur.fetchone()["count"] == 0:
+            super_email = os.environ.get("SUPER_ADMIN_EMAIL", "").strip().lower()
+            super_password = os.environ.get("SUPER_ADMIN_PASSWORD", "")
+            admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+            admin_password = os.environ.get("ADMIN_PASSWORD", "")
 
-    CREATE TABLE IF NOT EXISTS admin_access_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        admin_id INTEGER REFERENCES admins(id) ON DELETE SET NULL,
-        admin_email TEXT,
-        action TEXT NOT NULL,
-        module TEXT NOT NULL,
-        ip_address TEXT,
-        user_agent TEXT,
-        status TEXT NOT NULL DEFAULT 'SUCCESS',
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+            if super_email and super_password:
+                h_super = bcrypt.hashpw(super_password.encode("utf-8"), bcrypt.gensalt(12)).decode("utf-8")
+                cur.execute(
+                    "INSERT INTO admins (name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?)",
+                    (os.environ.get("SUPER_ADMIN_NAME", "Super Admin"), super_email, h_super, "SUPER_ADMIN", "ACTIVE")
+                )
+            if admin_email and admin_password:
+                h_admin = bcrypt.hashpw(admin_password.encode("utf-8"), bcrypt.gensalt(12)).decode("utf-8")
+                cur.execute(
+                    "INSERT INTO admins (name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?)",
+                    (os.environ.get("ADMIN_NAME", "Admin"), admin_email, h_admin, "ADMIN", "ACTIVE")
+                )
+            if not super_email or not super_password:
+                print("[WARN] No SUPER_ADMIN_EMAIL/SUPER_ADMIN_PASSWORD supplied; no Super Admin was seeded.", file=sys.stderr)
 
-    CREATE TABLE IF NOT EXISTS site_settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        setting_key TEXT NOT NULL UNIQUE,
-        setting_value TEXT,
-        updated_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+        cur.execute("SELECT COUNT(*) AS count FROM categories")
+        if cur.fetchone()["count"] == 0:
+            cats = [
+                ('Rings', 'rings', 'Handcrafted 22KT gold rings for every occasion.', 'images/cat-rings.jpg', 1),
+                ('Necklaces', 'necklaces', 'Elegant gold necklaces and chains.', 'images/cat-necklaces.jpg', 1),
+                ('Bangles', 'bangles', 'Timeless gold bangles and kadas.', 'images/cat-bangles.jpg', 1),
+                ('Earrings', 'earrings', 'Delicate and statement gold earrings.', 'images/cat-earrings.jpg', 1),
+                ('Bridal Sets', 'bridal-sets', 'Complete bridal jewellery collections.', 'images/cat-bridal.jpg', 1),
+                ("Men's Gold", 'mens-gold', 'Masculine gold chains, bracelets and accessories.', 'images/cat-mens.jpg', 1)
+            ]
+            cur.executemany("INSERT INTO categories (name, slug, description, image, active) VALUES (?, ?, ?, ?, ?)", cats)
 
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        phone TEXT,
-        status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE', 'DISABLED')),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+        cur.execute("SELECT COUNT(*) AS count FROM products")
+        if cur.fetchone()["count"] == 0:
+            prods = [
+                ('Heritage Gold Ring', 'heritage-gold-ring', 1, 'Intricately hand-crafted 22KT gold ring with fine filigree detailing.', 22, 4.200, 500, 31000, 33500, 10, 'SKU-001', 1, 1),
+                ('Royal Bridal Necklace', 'royal-bridal-necklace', 5, 'Traditional bridal masterpiece handcrafted for your grand wedding.', 22, 48.500, 5000, 350000, 375000, 3, 'SKU-002', 1, 1),
+                ('Temple Gold Bangles', 'temple-gold-bangles', 3, 'Timeless antique finished 22KT bangles and kadas crafted to perfection.', 22, 32.000, 3000, 235000, 250000, 5, 'SKU-003', 1, 1),
+                ("Classic Men's Chain", 'classic-mens-chain', 6, 'Durable and elegant 22KT machine-cut & hand-linked gold chain.', 22, 18.300, 2000, 135000, 142000, 8, 'SKU-004', 0, 1)
+            ]
+            cur.executemany("""
+                INSERT INTO products (name, slug, category_id, description, purity, weight, making_charges, base_price, current_price, stock, sku, featured, active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, prods)
 
-    CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        slug TEXT NOT NULL UNIQUE,
-        description TEXT,
-        image TEXT,
-        active INTEGER NOT NULL DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+        cur.execute("SELECT COUNT(*) AS count FROM site_settings")
+        if cur.fetchone()["count"] == 0:
+            settings = [
+                ('business_name', 'THE 22KT GOLD'),
+                ('business_email', 'info@the22ktgold.in'),
+                ('business_phone', '+91 98765 00000'),
+                ('business_whatsapp', '+91 98765 00000'),
+                ('business_address', 'Manek Chowk, Ahmedabad, Gujarat - 380001'),
+                ('business_hours', 'Mon–Sat: 10:30 AM – 8:30 PM'),
+                ('website_title', 'THE 22KT GOLD — Premium 22KT Gold Jewellery'),
+                ('meta_description', 'Genuine 22KT gold jewellery direct from manufacturing in Manek Chowk, Ahmedabad.'),
+                ('default_currency', 'INR'),
+                ('default_country', 'India'),
+                ('timezone', 'Asia/Kolkata'),
+                ('contact_email', 'contact@the22ktgold.in'),
+                ('support_phone', '+91 98765 00000'),
+                ('instagram', 'https://instagram.com/the22ktgold'),
+                ('facebook', 'https://facebook.com/the22ktgold'),
+                ('footer_text', 'Crafted with love. Hallmarked for purity.'),
+                ('copyright_text', '© 2026 THE 22KT GOLD. All rights reserved.'),
+                ('gold_is_manual', '0'),
+                ('gold_manual_22k', '7250'),
+                ('gold_manual_24k', '7910')
+            ]
+            cur.executemany("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)", settings)
 
-    CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        slug TEXT NOT NULL UNIQUE,
-        category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
-        description TEXT,
-        purity INTEGER NOT NULL DEFAULT 22,
-        weight REAL NOT NULL DEFAULT 0,
-        making_charges REAL NOT NULL DEFAULT 0,
-        base_price REAL NOT NULL DEFAULT 0,
-        current_price REAL NOT NULL DEFAULT 0,
-        stock INTEGER NOT NULL DEFAULT 0,
-        sku TEXT UNIQUE,
-        featured INTEGER NOT NULL DEFAULT 0,
-        active INTEGER NOT NULL DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
-    CREATE TABLE IF NOT EXISTS product_images (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        image_url TEXT NOT NULL,
-        is_primary INTEGER NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        order_number TEXT NOT NULL UNIQUE,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        customer_name TEXT NOT NULL,
-        customer_phone TEXT,
-        customer_email TEXT,
-        address TEXT,
-        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
-        product_name TEXT NOT NULL,
-        product_image TEXT,
-        quantity INTEGER NOT NULL DEFAULT 1,
-        weight REAL NOT NULL DEFAULT 0,
-        purity INTEGER NOT NULL DEFAULT 22,
-        gold_rate_used REAL NOT NULL DEFAULT 0,
-        making_charges REAL NOT NULL DEFAULT 0,
-        gst REAL NOT NULL DEFAULT 0,
-        discount REAL NOT NULL DEFAULT 0,
-        total_amount REAL NOT NULL DEFAULT 0,
-        payment_status TEXT NOT NULL DEFAULT 'Pending',
-        order_status TEXT NOT NULL DEFAULT 'Pending Payment',
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS order_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
-        name TEXT NOT NULL,
-        quantity INTEGER NOT NULL DEFAULT 1,
-        weight REAL NOT NULL DEFAULT 0,
-        price REAL NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS gold_rates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        rate_22k REAL NOT NULL,
-        rate_24k REAL NOT NULL,
-        rate_18k REAL NOT NULL,
-        source TEXT NOT NULL DEFAULT 'API',
-        is_manual INTEGER NOT NULL DEFAULT 0,
-        manual_22k REAL,
-        manual_24k REAL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS gold_rate_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        rate_22k REAL NOT NULL,
-        rate_24k REAL NOT NULL,
-        rate_18k REAL NOT NULL,
-        change_amount REAL NOT NULL DEFAULT 0,
-        change_percent REAL NOT NULL DEFAULT 0,
-        source TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS enquiries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        phone TEXT,
-        email TEXT,
-        message TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'New',
-        admin_notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS custom_orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        phone TEXT,
-        email TEXT,
-        jewellery_type TEXT NOT NULL,
-        description TEXT NOT NULL,
-        weight REAL,
-        purity INTEGER,
-        budget REAL,
-        reference_image TEXT,
-        status TEXT NOT NULL DEFAULT 'New',
-        quote_amount REAL,
-        admin_notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS gallery (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        alt_text TEXT,
-        image_url TEXT NOT NULL,
-        category TEXT,
-        featured INTEGER NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-
-    # ── Default Admin Seeding ──
-    cursor.execute("SELECT COUNT(*) FROM admins")
-    if cursor.fetchone()[0] == 0:
-        h_super = bcrypt.hashpw(b"Yash2112", bcrypt.gensalt(12)).decode("utf-8")
-        h_admin = bcrypt.hashpw(b"Veer@2112", bcrypt.gensalt(12)).decode("utf-8")
-        cursor.execute(
-            "INSERT INTO admins (name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?)",
-            ("Yash Panchal", "22ktgold@yashpanchal.com", h_super, "SUPER_ADMIN", "ACTIVE")
-        )
-        cursor.execute(
-            "INSERT INTO admins (name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?)",
-            ("Veer Shah", "22ktgold@veershah.com", h_admin, "ADMIN", "ACTIVE")
-        )
-
-    # ── Default Categories Seeding ──
-    cursor.execute("SELECT COUNT(*) FROM categories")
-    if cursor.fetchone()[0] == 0:
-        cats = [
-            ('Rings', 'rings', 'Handcrafted 22KT gold rings for every occasion.', 'images/cat-rings.jpg', 1),
-            ('Necklaces', 'necklaces', 'Elegant gold necklaces and chains.', 'images/cat-necklaces.jpg', 1),
-            ('Bangles', 'bangles', 'Timeless gold bangles and kadas.', 'images/cat-bangles.jpg', 1),
-            ('Earrings', 'earrings', 'Delicate and statement gold earrings.', 'images/cat-earrings.jpg', 1),
-            ('Bridal Sets', 'bridal-sets', 'Complete bridal jewellery collections.', 'images/cat-bridal.jpg', 1),
-            ("Men's Gold", 'mens-gold', 'Masculine gold chains, bracelets and accessories.', 'images/cat-mens.jpg', 1)
-        ]
-        cursor.executemany("INSERT INTO categories (name, slug, description, image, active) VALUES (?, ?, ?, ?, ?)", cats)
-
-    # ── Default Products Seeding ──
-    cursor.execute("SELECT COUNT(*) FROM products")
-    if cursor.fetchone()[0] == 0:
-        prods = [
-            ('Heritage Gold Ring', 'heritage-gold-ring', 1, 'Intricately hand-crafted 22KT gold ring with fine filigree detailing.', 22, 4.200, 500, 31000, 33500, 10, 'SKU-001', 1, 1),
-            ('Royal Bridal Necklace', 'royal-bridal-necklace', 5, 'Traditional bridal masterpiece handcrafted for your grand wedding.', 22, 48.500, 5000, 350000, 375000, 3, 'SKU-002', 1, 1),
-            ('Temple Gold Bangles', 'temple-gold-bangles', 3, 'Timeless antique finished 22KT bangles and kadas crafted to perfection.', 22, 32.000, 3000, 235000, 250000, 5, 'SKU-003', 1, 1),
-            ("Classic Men's Chain", 'classic-mens-chain', 6, 'Durable and elegant 22KT machine-cut & hand-linked gold chain.', 22, 18.300, 2000, 135000, 142000, 8, 'SKU-004', 0, 1)
-        ]
-        cursor.executemany("""
-            INSERT INTO products (name, slug, category_id, description, purity, weight, making_charges, base_price, current_price, stock, sku, featured, active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, prods)
-
-    # ── Default Site Settings ──
-    cursor.execute("SELECT COUNT(*) FROM site_settings")
-    if cursor.fetchone()[0] == 0:
-        settings = [
-            ('business_name', 'THE 22KT GOLD'),
-            ('business_email', 'info@the22ktgold.com'),
-            ('business_phone', '+91 98765 00000'),
-            ('business_whatsapp', '+91 98765 00000'),
-            ('business_address', 'Shop No. 1, Gold Market, Jewellers Street, Mumbai - 400001'),
-            ('business_hours', 'Mon–Sat: 10:00 AM – 8:00 PM, Sun: 11:00 AM – 6:00 PM'),
-            ('website_title', 'THE 22KT GOLD — Premium 22KT Gold Jewellery'),
-            ('meta_description', 'Handcrafted 22KT gold jewellery. Custom orders, bridal sets, rings, necklaces and more.'),
-            ('default_currency', 'INR'),
-            ('default_country', 'India'),
-            ('timezone', 'Asia/Kolkata'),
-            ('contact_email', 'contact@the22ktgold.com'),
-            ('support_phone', '+91 98765 00001'),
-            ('instagram', 'https://instagram.com/the22ktgold'),
-            ('facebook', 'https://facebook.com/the22ktgold'),
-            ('footer_text', 'Crafted with love. Hallmarked for purity.'),
-            ('copyright_text', '© 2026 THE 22KT GOLD. All rights reserved.'),
-            ('gold_is_manual', '0'),
-            ('gold_manual_22k', '7250'),
-            ('gold_manual_24k', '7910')
-        ]
-        cursor.executemany("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)", settings)
-
-    conn.commit()
-    conn.close()
-
-# Initialize DB on load
-init_db()
+# Initialize DB on load safely
+try:
+    init_db()
+except Exception as e:
+    print(f"init_db load error: {e}", file=sys.stderr)
 
 # ── Helper Utilities ──
 def make_slug(s):
@@ -1514,6 +1438,7 @@ def admin_delete_user(id):
     log_action(g.current_admin["id"], g.current_admin["email"], "DELETE_USER", "Users")
     return jsonify({"success": True})
 
+
 # ══════════════════════════════════════════════════════════════════
 # ADMIN ACCOUNTS MANAGEMENT (SUPER ADMIN ONLY)
 # ══════════════════════════════════════════════════════════════════
@@ -1759,5 +1684,5 @@ if __name__ == "__main__":
     print(f"\n[OK] THE 22KT GOLD Python Server running at http://localhost:{port}")
     print(f"[API] Admin Dashboard: http://localhost:{port}/admin-login.html")
     print(f"[API] Gold Rate API:   http://localhost:{port}/api/gold-rates")
-    print(f"[DB]  Database:        {DB_PATH}\n")
+    print(f"[DB]  PostgreSQL:      {PGDATABASE}@{PGHOST}:{PGPORT}\n")
     app.run(host="0.0.0.0", port=port, debug=False)
