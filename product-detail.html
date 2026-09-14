@@ -152,19 +152,13 @@
     </a>
 
     <!-- Product Detail Section -->
-    <main class="container product-detail-layout">
+    <main class="container product-detail-layout" id="productDetailContainer">
         <!-- Gallery Side (Sticky) -->
         <div class="product-gallery fade-up">
             <div class="product-main-image">
-                <img src="images/product-1.jpg" alt="Heritage Gold Rings">
+                <img id="p_main_image" src="images/cat-rings.jpg" alt="22KT Gold Jewellery">
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <div style="width: 80px; height: 100px; border: 2px solid var(--clr-gold); overflow: hidden;">
-                    <img src="images/product-1.jpg" style="width:100%; height:100%; object-fit:cover;">
-                </div>
-                <div style="width: 80px; height: 100px; border: 1px solid var(--clr-border); overflow: hidden;">
-                    <img src="images/intro.jpg" style="width:100%; height:100%; object-fit:cover; opacity: 0.8;">
-                </div>
+            <div id="p_thumbnails" style="display: flex; gap: 0.8rem; margin-top: 1rem; overflow-x: auto;">
             </div>
         </div>
 
@@ -174,31 +168,33 @@
                 <a href="collections.html" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--clr-gold); font-weight: 600;">&larr; Back to All Collections</a>
             </div>
             
-            <h1>Heritage 22KT Gold Ring</h1>
-            <span class="badge">100% 22KT (916) Gold</span>
+            <h1 id="p_title">Heritage 22KT Gold Ring</h1>
+            <span class="badge" id="p_purity_badge">100% 22KT (916) Gold</span>
             
-            <p class="desc">
-                Intricately hand-finished by master goldsmiths in Manek Chowk. Designed with traditional Gujarati filigree patterns, perfectly balanced for daily wear and festive occasions.
-                <br><br>
-                Because we manufacture directly, this piece can be customized in your exact ring size, desired gold weight (e.g. 5g to 15g), and preferred polish finish (antique, yellow high-shine, or matte).
+            <p class="desc" id="p_desc">
+                Intricately hand-finished by master goldsmiths in Manek Chowk. Designed with traditional craftsmanship, balanced for daily wear and festive occasions.
             </p>
             
             <div class="product-specs">
                 <div class="spec-item">
                     <span class="spec-label">Gold Purity</span>
-                    <span class="spec-value">22KT (916) BIS Hallmarked</span>
+                    <span class="spec-value" id="p_spec_purity">22KT (916) BIS Hallmarked</span>
                 </div>
                 <div class="spec-item">
                     <span class="spec-label">Category</span>
-                    <span class="spec-value">Rings / Unisex & Women</span>
+                    <span class="spec-value" id="p_spec_category">Gold Jewellery</span>
                 </div>
                 <div class="spec-item">
-                    <span class="spec-label">Approximate Weight</span>
-                    <span class="spec-value">6.5g – 12.0g (Customizable)</span>
+                    <span class="spec-label">Net Weight</span>
+                    <span class="spec-value" id="p_spec_weight">-- gm</span>
                 </div>
                 <div class="spec-item">
-                    <span class="spec-label">Making Time</span>
-                    <span class="spec-value">5–8 Working Days (Custom Orders)</span>
+                    <span class="spec-label">SKU / Code</span>
+                    <span class="spec-value" id="p_spec_sku">--</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Making Charges</span>
+                    <span class="spec-value" id="p_spec_making">Direct Factory Rate</span>
                 </div>
                 <div class="spec-item">
                     <span class="spec-label">Origin</span>
@@ -206,14 +202,61 @@
                 </div>
             </div>
             
-            <div style="background-color: var(--clr-gold-bg); padding: 1.5rem; border-left: 4px solid var(--clr-gold); margin-bottom: 2rem;">
-                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--clr-gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Transparent Pricing</h4>
-                <p style="font-size: 0.88rem; color: var(--clr-text-muted);">Gold price is charged based on daily Ahmedabad 22KT bullion market rate + direct factory making charges.</p>
+            <div style="background-color: var(--clr-gold-bg); padding: 1.5rem; border-left: 4px solid var(--clr-gold); margin-bottom: 1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--clr-gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.2rem;">Today's Estimated Value</h4>
+                        <div id="p_price_display" style="font-size:1.8rem; font-weight:800; color:var(--clr-dark);">Calculating...</div>
+                    </div>
+                    <span style="font-size:0.75rem; color:var(--clr-text-muted);" id="p_rate_time">Live Bullion Rate</span>
+                </div>
             </div>
             
-            <a href="https://wa.me/919429616414?text=Hi%20THE%2022KT%20GOLD,%20I%20am%20interested%20in%20the%20'Heritage%2022KT%20Gold%20Ring'.%20Please%20share%20today's%20quotation%20and%20available%20weight%20options." target="_blank" class="btn btn-gold" style="width: 100%; padding: 1.2rem; font-size: 0.9rem;">Enquire & Get Quotation on WhatsApp</a>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <button onclick="openOrderModal()" class="btn btn-gold" style="flex:1; min-width:220px; padding:1.1rem 1.5rem; font-size:0.95rem; cursor:pointer;">🛍 Place Order / Book Piece</button>
+                <a id="p_wa_btn" href="https://wa.me/919429616414" target="_blank" class="btn btn-accent" style="flex:1; min-width:200px; padding:1.1rem 1.5rem; text-align:center; font-size:0.95rem;">💬 WhatsApp Quotation</a>
+            </div>
         </div>
     </main>
+
+    <!-- Order Modal -->
+    <div id="orderModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+        <div style="background:#fff; max-width:500px; width:100%; border:1px solid var(--clr-border); box-shadow:0 20px 50px rgba(0,0,0,0.2); padding:2rem; position:relative;">
+            <button onclick="closeOrderModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--clr-text-muted);">&times;</button>
+            <h3 style="font-family:'Playfair Display',serif; font-size:1.5rem; margin-bottom:0.5rem;" id="modalOrderTitle">Order Jewellery</h3>
+            <p style="font-size:0.85rem; color:var(--clr-text-muted); margin-bottom:1.5rem;">Enter your delivery/booking details. We will process your order immediately.</p>
+            
+            <form id="publicOrderForm" onsubmit="submitProductOrder(event)">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:600; text-transform:uppercase;">Your Name *</label>
+                    <input type="text" id="ord_name" class="form-input" placeholder="Full name" required style="width:100%; padding:0.75rem; border:1px solid var(--clr-border); font-family:'DM Sans',sans-serif;">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:600; text-transform:uppercase;">Mobile / WhatsApp *</label>
+                    <input type="tel" id="ord_phone" class="form-input" placeholder="+91 XXXXX XXXXX" required style="width:100%; padding:0.75rem; border:1px solid var(--clr-border); font-family:'DM Sans',sans-serif;">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:600; text-transform:uppercase;">Email Address (Optional)</label>
+                    <input type="email" id="ord_email" class="form-input" placeholder="email@example.com" style="width:100%; padding:0.75rem; border:1px solid var(--clr-border); font-family:'DM Sans',sans-serif;">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:600; text-transform:uppercase;">Delivery Address / City *</label>
+                    <textarea id="ord_address" rows="2" class="form-input" placeholder="Your complete address or city" required style="width:100%; padding:0.75rem; border:1px solid var(--clr-border); font-family:'DM Sans',sans-serif;"></textarea>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; text-transform:uppercase;">Quantity</label>
+                        <input type="number" id="ord_qty" value="1" min="1" max="50" style="width:100%; padding:0.75rem; border:1px solid var(--clr-border); font-family:'DM Sans',sans-serif;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; text-transform:uppercase;">Total Estimate</label>
+                        <div id="ord_total_preview" style="padding:0.75rem; font-weight:700; color:var(--clr-gold); font-size:1.1rem;">₹0</div>
+                    </div>
+                </div>
+                <button type="submit" id="ord_submit_btn" class="btn btn-gold" style="width:100%; padding:1rem; font-size:0.95rem; font-weight:700;">Confirm &amp; Place Order &rarr;</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -276,5 +319,150 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        let currentProduct = null;
+        let currentPrice = 0;
+
+        const fmtPrice = n => (n === null || n === undefined || isNaN(Number(n)) || Number(n) <= 0) 
+            ? 'Price on Request' 
+            : '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+        async function initProductDetailPage() {
+            const params = new URLSearchParams(window.location.search);
+            const prodId = params.get('id') || '1';
+
+            try {
+                // Fetch product details
+                const res = await fetch('/api/products/' + prodId);
+                if (!res.ok) throw new Error('Product not found');
+                currentProduct = await res.json();
+
+                // Fetch live gold rate for live calculated price
+                let liveRate22k = 7250;
+                try {
+                    const rateRes = await fetch('/api/gold-rates');
+                    if (rateRes.ok) {
+                        const rateData = await rateRes.json();
+                        liveRate22k = rateData.rate22k || liveRate22k;
+                    }
+                } catch(e) {}
+
+                // Populate fields
+                const title = currentProduct.title || currentProduct.name || '22KT Gold Jewellery';
+                document.title = `${title} | THE 22KT GOLD Ahmedabad`;
+                document.getElementById('p_title').textContent = title;
+                document.getElementById('p_purity_badge').textContent = `100% ${currentProduct.purity || 22}KT Gold (BIS Hallmarked)`;
+                document.getElementById('p_desc').innerHTML = currentProduct.description || 'Intricately handcrafted 22KT gold piece direct from Manek Chowk manufacturing.';
+                document.getElementById('p_spec_purity').textContent = `${currentProduct.purity || 22}KT (916) BIS Hallmarked`;
+                document.getElementById('p_spec_category').textContent = currentProduct.category_name || 'Gold Jewellery';
+                document.getElementById('p_spec_weight').textContent = `${currentProduct.weight || 0} gm`;
+                document.getElementById('p_spec_sku').textContent = currentProduct.sku || ('SKU-' + currentProduct.id);
+                document.getElementById('p_spec_making').textContent = currentProduct.making_charges ? `₹${currentProduct.making_charges}/g (Factory Direct)` : 'Included';
+
+                // Calculate price: weight * live rate + making
+                const calculatedPrice = currentProduct.current_price || (currentProduct.weight * liveRate22k + (currentProduct.making_charges || 0));
+                currentPrice = calculatedPrice;
+                document.getElementById('p_price_display').textContent = fmtPrice(calculatedPrice);
+                document.getElementById('ord_total_preview').textContent = fmtPrice(calculatedPrice);
+
+                // Images
+                const mainImg = document.getElementById('p_main_image');
+                mainImg.src = currentProduct.primary_image || currentProduct.image || 'images/cat-rings.jpg';
+                mainImg.alt = title;
+
+                const thumbsWrap = document.getElementById('p_thumbnails');
+                thumbsWrap.innerHTML = '';
+                if (currentProduct.images && currentProduct.images.length > 0) {
+                    currentProduct.images.forEach(img => {
+                        const thumb = document.createElement('div');
+                        thumb.style.cssText = 'width:70px; height:85px; border:1px solid var(--clr-border); cursor:pointer; overflow:hidden; flex-shrink:0;';
+                        thumb.innerHTML = `<img src="${img.image_url}" style="width:100%; height:100%; object-fit:cover;">`;
+                        thumb.onclick = () => { mainImg.src = img.image_url; };
+                        thumbsWrap.appendChild(thumb);
+                    });
+                }
+
+                // WhatsApp message link
+                const waMsg = `Hi THE 22KT GOLD, I am interested in '${title}' (${currentProduct.weight}g, ${currentProduct.purity}KT). Current estimated quotation: ${fmtPrice(calculatedPrice)}. Please share available stock and booking details.`;
+                document.getElementById('p_wa_btn').href = `https://wa.me/919429616414?text=${encodeURIComponent(waMsg)}`;
+
+            } catch (err) {
+                console.error('Error loading product details:', err);
+                document.getElementById('p_title').textContent = 'Product Catalogue';
+                document.getElementById('p_desc').textContent = 'Unable to load specified product. Explore other pieces from our collections.';
+            }
+        }
+
+        function openOrderModal() {
+            document.getElementById('orderModalOverlay').style.display = 'flex';
+            document.getElementById('modalOrderTitle').textContent = `Order: ${currentProduct?.title || 'Jewellery'}`;
+            updateOrderTotal();
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModalOverlay').style.display = 'none';
+        }
+
+        document.getElementById('ord_qty')?.addEventListener('input', updateOrderTotal);
+
+        function updateOrderTotal() {
+            const qty = parseInt(document.getElementById('ord_qty')?.value || 1);
+            const total = currentPrice * qty;
+            document.getElementById('ord_total_preview').textContent = fmtPrice(total);
+        }
+
+        async function submitProductOrder(e) {
+            e.preventDefault();
+            const btn = document.getElementById('ord_submit_btn');
+            btn.textContent = 'Processing Order...';
+            btn.disabled = true;
+
+            const name = document.getElementById('ord_name').value.trim();
+            const phone = document.getElementById('ord_phone').value.trim();
+            const email = document.getElementById('ord_email').value.trim();
+            const address = document.getElementById('ord_address').value.trim();
+            const qty = parseInt(document.getElementById('ord_qty').value || 1);
+            const total = currentPrice * qty;
+
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: name,
+                        customer_phone: phone,
+                        customer_email: email,
+                        address: address,
+                        product_id: currentProduct?.id,
+                        product_name: currentProduct?.title || currentProduct?.name || '22KT Gold Piece',
+                        product_image: currentProduct?.primary_image || currentProduct?.image,
+                        quantity: qty,
+                        weight: (currentProduct?.weight || 0) * qty,
+                        purity: currentProduct?.purity || 22,
+                        total_amount: total
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    closeOrderModal();
+                    alert(`✨ Order Placed Successfully!\n\nOrder Number: ${data.order_number}\nOur workshop team has received your order and will contact you shortly.`);
+                    
+                    // Also open WhatsApp with pre-formatted order summary
+                    const waText = `Hi THE 22KT GOLD, I just placed an order on your website:\n\n*Order Number:* ${data.order_number}\n*Product:* ${currentProduct?.title || 'Jewellery'}\n*Quantity:* ${qty}\n*Name:* ${name}\n*Phone:* ${phone}\n*Address:* ${address}\n*Total:* ${fmtPrice(total)}`;
+                    window.open(`https://wa.me/919429616414?text=${encodeURIComponent(waText)}`, '_blank');
+                } else {
+                    throw new Error('Failed to submit order');
+                }
+            } catch(err) {
+                alert('Order error: ' + err.message + '. Please try again or contact us on WhatsApp.');
+            } finally {
+                btn.textContent = 'Confirm & Place Order →';
+                btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initProductDetailPage);
+    </script>
 </body>
 </html>
