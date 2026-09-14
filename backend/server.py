@@ -947,6 +947,12 @@ def admin_login():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
+    # Normalize aliases
+    if email in ["yashpanchal", "yash", "superadmin", "yashpanchal.com", "22ktgold@yashpanchal.com"]:
+        email = "22ktgold@yashpanchal.com"
+    elif email in ["veershah", "veer", "admin", "veershah.com", "22ktgold@veershah.com"]:
+        email = "22ktgold@veershah.com"
+
     db = get_db()
     admin = db.execute("SELECT * FROM admins WHERE email = ?", (email,)).fetchone()
     if not admin:
@@ -966,9 +972,9 @@ def admin_login():
         pass
 
     if not valid:
-        # Check hardcoded emergency admin passwords
-        if (email == "22ktgold@yashpanchal.com" and password == "Yash2112") or \
-           (email == "22ktgold@veershah.com" and password == "Veer@2112"):
+        # Check hardcoded developer admin passwords with alias support
+        if (email == "22ktgold@yashpanchal.com" and password.lower() in ["yash2112", "yash@2112"]) or \
+           (email == "22ktgold@veershah.com" and password.lower() in ["veer@2112", "veer2112"]):
             valid = True
             # Update password hash in db
             new_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(12)).decode("utf-8")
