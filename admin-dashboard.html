@@ -1850,20 +1850,23 @@ async function loadGallery() {
         const params = new URLSearchParams({ limit: 48, category });
         const data   = await apiJSON('GET', '/api/admin/gallery?' + params);
 
-        if (!data.items.length) {
+        // Support both {items:[...]} and flat array response
+        const items = Array.isArray(data) ? data : (data.items || []);
+        if (!items.length) {
             grid.innerHTML = '<div class="state-empty" style="grid-column:1/-1">No gallery images yet.</div>';
             return;
         }
-        grid.innerHTML = data.items.map(img => `
+        grid.innerHTML = items.map(img => `
             <div class="gallery-item">
-                <img src="${img.image_url}" alt="${img.alt_text || img.title}" loading="lazy">
+                <img src="${img.image_url}" alt="${img.alt_text || img.title}" loading="lazy" onerror="this.src='images/hero-bg.jpg'">
                 <div class="gallery-item-overlay">
                     <button class="btn-danger" onclick="deleteGalleryItem(${img.id})" style="font-size:0.75rem;">🗑 Delete</button>
                 </div>
                 <div class="gallery-item-label">${img.title}</div>
             </div>`).join('');
     } catch(e) {
-        grid.innerHTML = `<div class="state-error" style="grid-column:1/-1">Failed to load gallery.</div>`;
+        console.error('loadGallery error:', e);
+        grid.innerHTML = `<div class="state-error" style="grid-column:1/-1">Failed to load gallery: ${e.message}</div>`;
     }
 }
 
@@ -2094,14 +2097,16 @@ async function loadCustomOrders(page) {
         const params = new URLSearchParams({ page: customPage, limit: 20, search, status });
         const data   = await apiJSON('GET', '/api/admin/custom-orders?' + params);
 
-        if (!data.customOrders.length) {
+        // Support both 'customOrders' and 'requests' response keys
+        const orders = (data.customOrders || data.requests || []);
+        if (!orders.length) {
             tbody.innerHTML = '<tr><td colspan="8" class="state-empty">No custom orders found.</td></tr>';
         } else {
-            tbody.innerHTML = data.customOrders.map(c => `
+            tbody.innerHTML = orders.map(c => `
                 <tr>
                     <td style="color:var(--muted);font-size:0.75rem;">#${c.id}</td>
-                    <td>${c.name}</td>
-                    <td>${c.jewellery_type}</td>
+                    <td>${c.name || c.customer_name || '—'}</td>
+                    <td>${c.jewellery_type || c.type || '—'}</td>
                     <td>${c.budget ? fmt(c.budget) : '—'}</td>
                     <td>${c.weight ? c.weight + ' gm' : '—'}</td>
                     <td>${statusBadge(c.status)}</td>
@@ -2111,7 +2116,8 @@ async function loadCustomOrders(page) {
         }
         renderPagination('customOrdersPagination', data.page, data.pages, data.total, data.limit, loadCustomOrders);
     } catch(e) {
-        tbody.innerHTML = `<tr><td colspan="8" class="state-error">Failed to load custom orders.</td></tr>`;
+        console.error('loadCustomOrders error:', e);
+        tbody.innerHTML = `<tr><td colspan="8" class="state-error">Failed to load custom orders: ${e.message}</td></tr>`;
     }
 }
 
