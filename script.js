@@ -463,7 +463,7 @@ function switchAuthTab(tab) {
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     const email    = document.getElementById('loginEmail')?.value?.trim();
     const password = document.getElementById('loginPassword')?.value;
@@ -474,13 +474,34 @@ function handleLogin(e) {
     showAuthSuccess();
 }
 
-function handleSignup(e) {
+async function handleSignup(e) {
     e.preventDefault();
     const first = document.getElementById('signupFirst')?.value?.trim();
+    const last  = document.getElementById('signupLast')?.value?.trim() || '';
     const email = document.getElementById('signupEmail')?.value?.trim();
+    const phone = document.getElementById('signupPhone')?.value?.trim() || '';
+    const pwd   = document.getElementById('signupPassword')?.value || '';
     if (!first || !email) return;
 
-    localStorage.setItem('22ktUser', JSON.stringify({ name: first, email, loggedIn: true }));
+    const fullName = last ? `${first} ${last}` : first;
+
+    try {
+        await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: fullName,
+                email: email,
+                phone: phone,
+                city: '',
+                role: 'customer'
+            })
+        });
+    } catch (err) {
+        console.warn('User signup offline fallback:', err);
+    }
+
+    localStorage.setItem('22ktUser', JSON.stringify({ name: fullName, email, phone, loggedIn: true }));
     showAuthSuccess();
 }
 
