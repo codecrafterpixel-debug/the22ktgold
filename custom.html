@@ -470,7 +470,8 @@
             }
         }
 
-        function submitCustomForm() {
+        async function submitCustomForm() {
+            const nameBtn  = document.querySelector('.custom-form-wrapper button[onclick="submitCustomForm()"]');
             const name     = document.getElementById('c_name').value.trim();
             const phone    = document.getElementById('c_phone').value.trim();
             const address  = document.getElementById('c_address').value.trim();
@@ -490,6 +491,39 @@
             if (!name || !phone || !address || !type || !desc) {
                 alert('Please fill in all required fields (marked with *).');
                 return;
+            }
+
+            const origText = nameBtn ? nameBtn.innerHTML : 'Send Enquiry on WhatsApp &rarr;';
+            if (nameBtn) {
+                nameBtn.disabled = true;
+                nameBtn.innerHTML = 'Submitting & Opening WhatsApp...';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('phone', phone);
+                formData.append('email', email);
+                formData.append('address', address);
+                formData.append('jewellery_type', type);
+                formData.append('occasion', occasion);
+                formData.append('purity', purity);
+                formData.append('weight', weight);
+                formData.append('size', size);
+                formData.append('finish', finish);
+                formData.append('budget', budget);
+                formData.append('description', desc);
+                formData.append('reference_link', refLink);
+                if (hasFile) {
+                    formData.append('image', fileInput.files[0]);
+                }
+
+                await fetch('/api/custom-orders', {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (err) {
+                console.warn('API custom order backup failed, continuing to WhatsApp:', err);
             }
 
             const message =
@@ -514,9 +548,14 @@
 ${desc}
 
 *Reference Link:* ${refLink || 'None'}
-*Reference Image:* ${hasFile ? 'Yes – I will attach it in this WhatsApp chat.' : 'None attached'}
+*Reference Image:* ${hasFile ? 'Yes – I have attached it / will attach in chat.' : 'None attached'}
 
 Please share quotation, gold weight details, and making charges. Thank you!`;
+
+            if (nameBtn) {
+                nameBtn.disabled = false;
+                nameBtn.innerHTML = origText;
+            }
 
             window.open(`https://wa.me/919429616414?text=${encodeURIComponent(message)}`, '_blank');
         }
