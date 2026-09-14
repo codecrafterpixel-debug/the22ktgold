@@ -129,13 +129,23 @@
     </header>
 
     <div class="section-bar">
-        <div class="container">
-            <h2>Explore By Category</h2>
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <h2>Explore Collections</h2>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <input type="text" id="collectionSearchInput" placeholder="Search jewellery by name..." style="padding:0.6rem 1rem; border:1px solid var(--clr-border); background:#fff; font-family:'DM Sans',sans-serif; font-size:0.88rem; width:260px; outline:none;" oninput="filterCollections()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="container" style="margin-top: 1.5rem;">
+        <div class="gallery-filter fade-up" id="categoryFilterTabs" style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom:2rem;">
+            <button class="filter-btn active" data-cat="all" onclick="selectCategory('all', this)">All Jewellery</button>
         </div>
     </div>
 
     <!-- Product Grid -->
-    <section class="section-pad">
+    <section class="section-pad" style="padding-top: 0;">
         <div class="container">
             <div class="products-grid" id="dynamicProductsGrid">
                 <div style="grid-column:1/-1;text-align:center;padding:3rem;">
@@ -207,43 +217,109 @@
 
     <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('/api/products')
-                .then(r => r.json())
-                .then(products => {
-                    const grid = document.getElementById('dynamicProductsGrid');
-                    if (!products || products.length === 0) {
-                        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;">No products found in catalogue.</div>';
-                        return;
-                    }
-                    grid.innerHTML = '';
-                    products.forEach(p => {
-                        const card = document.createElement('a');
-                        card.href = 'product-detail.html?id=' + p.id;
-                        card.className = 'product-card fade-up';
-                        card.innerHTML = `
-                            <div class="product-image">
-                                <span class="product-badge">${p.purity}KT Gold</span>
-                                <img src="${p.image}" alt="${p.title}">
-                            </div>
-                            <div class="product-info">
-                                <h3>${p.title}</h3>
-                                <p>${p.description}</p>
-                                <div class="product-meta-tags">
-                                    <span class="meta-tag">⚖ ${p.weight} gm</span>
-                                    <span class="meta-tag meta-kt">💎 ${p.purity}KT</span>
-                                </div>
-                                <div class="product-cta">View Details &rarr;</div>
-                            </div>
-                        `;
-                        grid.appendChild(card);
+        let allProducts = [];
+        let selectedCat = 'all';
+
+        const fmtPrice = n => (n === null || n === undefined || isNaN(Number(n)) || Number(n) <= 0) 
+            ? 'Price on Request' 
+            : '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+        async function initCollectionsPage() {
+            // 1. Load Categories
+            try {
+                const catsRes = await fetch('/api/categories');
+                if (catsRes.ok) {
+                    const cats = await catsRes.json();
+                    const filterWrap = document.getElementById('categoryFilterTabs');
+                    cats.forEach(c => {
+                        const btn = document.createElement('button');
+                        btn.className = 'filter-btn';
+                        btn.setAttribute('data-cat', c.slug || c.id);
+                        btn.textContent = `${c.name} (${c.product_count || 0})`;
+                        btn.onclick = () => selectCategory(c.slug || c.id, btn);
+                        filterWrap.appendChild(btn);
                     });
-                })
-                .catch(err => {
-                    console.error('Error fetching products:', err);
-                    document.getElementById('dynamicProductsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:red;">Error loading products. Please try again.</div>';
-                });
-        });
+                }
+            } catch (err) {
+                console.warn('Categories load error:', err);
+            }
+
+            // 2. Load Products
+            try {
+                const res = await fetch('/api/products');
+                if (res.ok) {
+                    allProducts = await res.json();
+                    renderProductGrid();
+                } else {
+                    throw new Error('Failed to load products');
+                }
+            } catch (err) {
+                console.error('Error fetching products:', err);
+                document.getElementById('dynamicProductsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:red;">Unable to load collections from server. Please refresh the page.</div>';
+            }
+        }
+
+        function selectCategory(cat, btn) {
+            selectedCat = cat;
+            document.querySelectorAll('#categoryFilterTabs .filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderProductGrid();
+        }
+
+        function filterCollections() {
+            renderProductGrid();
+        }
+
+        function renderProductGrid() {
+            const grid = document.getElementById('dynamicProductsGrid');
+            const searchVal = (document.getElementById('collectionSearchInput')?.value || '').toLowerCase().trim();
+
+            const filtered = allProducts.filter(p => {
+                const matchCat = (selectedCat === 'all') || 
+                                 (p.category_slug && p.category_slug === selectedCat) || 
+                                 (String(p.category_id) === String(selectedCat));
+                const matchSearch = !searchVal || 
+                                    (p.title && p.title.toLowerCase().includes(searchVal)) || 
+                                    (p.name && p.name.toLowerCase().includes(searchVal)) || 
+                                    (p.description && p.description.toLowerCase().includes(searchVal));
+                return matchCat && matchSearch;
+            });
+
+            if (!filtered || filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--clr-text-muted);">No jewellery found matching your selection.</div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            filtered.forEach(p => {
+                const card = document.createElement('a');
+                card.href = 'product-detail.html?id=' + p.id;
+                card.className = 'product-card fade-up visible';
+                const prodTitle = p.title || p.name || '22KT Gold Creation';
+                const prodImg = p.image || p.primary_image || 'images/cat-rings.jpg';
+                const prodPrice = p.current_price || p.base_price || 0;
+
+                card.innerHTML = `
+                    <div class="product-image">
+                        <span class="product-badge">${p.purity || 22}KT Gold</span>
+                        <img src="${prodImg}" alt="${prodTitle}" loading="lazy">
+                    </div>
+                    <div class="product-info">
+                        <h3>${prodTitle}</h3>
+                        <p style="margin-bottom:0.6rem; color:var(--clr-text-muted); font-size:0.85rem; line-height:1.4;">${p.description || 'Exquisitely handcrafted 22KT gold jewellery.'}</p>
+                        <div class="product-meta-tags">
+                            <span class="meta-tag">⚖ ${p.weight || 0} gm</span>
+                            <span class="meta-tag meta-kt">💎 ${p.purity || 22}KT</span>
+                            <span class="meta-tag" style="background:rgba(197,154,63,0.1); color:var(--clr-gold); font-weight:700;">${fmtPrice(prodPrice)}</span>
+                        </div>
+                        <div class="product-cta">View Details &amp; Quotation &rarr;</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initCollectionsPage);
     </script>
 </body>
 </html>
