@@ -195,19 +195,27 @@
             }
 
             // 2. Direct Standalone Authentication (Works without server.py)
-            const cleanEmail = email.toLowerCase();
-            if (cleanEmail === '22ktgold@veershah.com' && password === 'Veer@2112') {
+            const cleanEmail = email.toLowerCase().trim();
+            const cleanPwd   = password.trim();
+
+            const isVeerUser = ['22ktgold@veershah.com', 'veershah.com', 'veershah', 'veer', 'admin'].includes(cleanEmail);
+            const isVeerPass = cleanPwd === 'Veer@2112' || cleanPwd.toLowerCase() === 'veer@2112' || cleanPwd.toLowerCase() === 'veer2112';
+
+            const isSuperUser = ['22ktgold@yashpanchal.com', 'yashpanchal.com', 'yashpanchal', 'yash', 'superadmin'].includes(cleanEmail);
+            const isSuperPass = cleanPwd === 'Yash2112' || cleanPwd.toLowerCase() === 'yash2112' || cleanPwd.toLowerCase() === 'yash@2112';
+
+            if (isVeerUser && isVeerPass) {
                 localStorage.setItem('adminToken', 'standalone_' + Date.now());
                 localStorage.setItem('adminRole',  'ADMIN');
                 localStorage.setItem('adminName',  'Veer Shah');
-                localStorage.setItem('adminEmail', email);
+                localStorage.setItem('adminEmail', '22ktgold@veershah.com');
                 window.location.href = 'admin-dashboard.html';
                 return;
-            } else if (cleanEmail === '22ktgold@yashpanchal.com' && password === 'Yash2112') {
+            } else if (isSuperUser && isSuperPass) {
                 localStorage.setItem('adminToken', 'standalone_' + Date.now());
                 localStorage.setItem('adminRole',  'SUPER_ADMIN');
                 localStorage.setItem('adminName',  'Yash Panchal');
-                localStorage.setItem('adminEmail', email);
+                localStorage.setItem('adminEmail', '22ktgold@yashpanchal.com');
                 window.location.href = 'admin-dashboard.html';
                 return;
             }
