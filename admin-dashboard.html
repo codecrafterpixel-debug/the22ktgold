@@ -1150,6 +1150,22 @@ function getMockData(url, method = 'GET', body = null) {
         };
     }
 
+    if (cleanUrl.includes('/gallery')) {
+        return {
+            items: [
+                { id: 1, title: "Royal Temple Bridal Necklace", category: "Bridal Sets", image_url: "images/hero-bg.jpg", alt_text: "Bridal Gold Jewellery", featured: 1, active: 1, created_at: now },
+                { id: 2, title: "Hand-Carved Filigree Detailing", category: "Workshop", image_url: "images/intro.jpg", alt_text: "Master Goldsmith at work", featured: 1, active: 1, created_at: now },
+                { id: 3, title: "Heritage Antique Gold Ring", category: "Rings", image_url: "images/product-1.jpg", alt_text: "22KT Gold Ring", featured: 1, active: 1, created_at: now }
+            ],
+            gallery: [
+                { id: 1, title: "Royal Temple Bridal Necklace", category: "Bridal Sets", image_url: "images/hero-bg.jpg", alt_text: "Bridal Gold Jewellery", featured: 1, active: 1, created_at: now },
+                { id: 2, title: "Hand-Carved Filigree Detailing", category: "Workshop", image_url: "images/intro.jpg", alt_text: "Master Goldsmith at work", featured: 1, active: 1, created_at: now },
+                { id: 3, title: "Heritage Antique Gold Ring", category: "Rings", image_url: "images/product-1.jpg", alt_text: "22KT Gold Ring", featured: 1, active: 1, created_at: now }
+            ],
+            total: 3
+        };
+    }
+
     if (cleanUrl.includes('/admins')) {
         return [
             { id: 1, name: "Yash Panchal", email: "22ktgold@yashpanchal.com", role: "SUPER_ADMIN", status: "ACTIVE", last_login: now },
@@ -1850,8 +1866,8 @@ async function loadGallery() {
         const params = new URLSearchParams({ limit: 48, category });
         const data   = await apiJSON('GET', '/api/admin/gallery?' + params);
 
-        // Support both {items:[...]} and flat array response
-        const items = Array.isArray(data) ? data : (data.items || []);
+        // Support {items:[...]}, {gallery:[...]}, and flat array responses
+        const items = Array.isArray(data) ? data : (data.items || data.gallery || []);
         if (!items.length) {
             grid.innerHTML = '<div class="state-empty" style="grid-column:1/-1">No gallery images yet.</div>';
             return;
