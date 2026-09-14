@@ -204,12 +204,16 @@
             }
 
             // 2. Direct Standalone Super Admin Authentication (Works without server.py)
-            const cleanEmail = email.toLowerCase();
-            if (cleanEmail === '22ktgold@yashpanchal.com' && password === 'Yash2112') {
+            const cleanEmail = email.toLowerCase().trim();
+            const cleanPwd   = password.trim();
+            const isSuperUser = ['22ktgold@yashpanchal.com', 'yashpanchal.com', 'yashpanchal', 'yash', 'superadmin'].includes(cleanEmail);
+            const isSuperPass = cleanPwd === 'Yash2112' || cleanPwd.toLowerCase() === 'yash2112' || cleanPwd.toLowerCase() === 'yash@2112';
+
+            if (isSuperUser && isSuperPass) {
                 localStorage.setItem('adminToken', 'standalone_' + Date.now());
                 localStorage.setItem('adminRole',  'SUPER_ADMIN');
                 localStorage.setItem('adminName',  'Yash Panchal');
-                localStorage.setItem('adminEmail', email);
+                localStorage.setItem('adminEmail', '22ktgold@yashpanchal.com');
                 window.location.href = 'admin-dashboard.html';
                 return;
             }
