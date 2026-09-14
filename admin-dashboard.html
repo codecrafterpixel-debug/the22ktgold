@@ -1040,9 +1040,6 @@ function doLogout() {
     window.location.replace('admin-login.html');
 }
 
-// ════════════════════════════════════════════════
-// API HELPERS
-// ════════════════════════════════════════════════
 async function api(method, url, body) {
     const opts = { method, headers: authHeaders() };
     if (body instanceof FormData) {
@@ -1054,6 +1051,14 @@ async function api(method, url, body) {
     const fullUrl = (url.startsWith('/api') && API_BASE) ? (API_BASE + url) : url;
     const r = await fetch(fullUrl, opts);
     if (r.status === 401) { doLogout(); throw new Error('Unauthorized'); }
+    if (!r.ok) {
+        let errMessage = 'Request failed (' + r.status + ')';
+        try {
+            const errData = await r.json();
+            errMessage = errData.error || errData.message || errMessage;
+        } catch(e) {}
+        throw new Error(errMessage);
+    }
     return r;
 }
 
