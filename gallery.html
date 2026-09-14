@@ -268,19 +268,91 @@
 
     <script src="script.js"></script>
     <script>
-        function filterGallery(category, btn) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        let allGalleryItems = [];
+        let activeGalleryCategory = 'all';
 
-            const items = document.querySelectorAll('.gallery-item');
-            items.forEach(item => {
-                if (category === 'all' || item.getAttribute('data-category') === category) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
+        async function initGallery() {
+            try {
+                const res = await fetch('/api/gallery');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        allGalleryItems = data;
+                        renderDynamicCategories(data);
+                        renderGallery(data);
+                    }
                 }
-            });
+            } catch (err) {
+                console.log('Using default gallery display:', err);
+            }
         }
+
+        function renderDynamicCategories(items) {
+            const filterContainer = document.querySelector('.gallery-filter');
+            if (!filterContainer) return;
+            
+            const cats = new Set(['all']);
+            items.forEach(i => {
+                if (i.category) cats.add(i.category.toLowerCase().trim());
+            });
+
+            // If we have distinct categories from database, render buttons
+            if (cats.size > 1) {
+                let html = `<button class="filter-btn active" onclick="filterGallery('all', this)">All Creations</button>`;
+                cats.forEach(c => {
+                    if (c !== 'all') {
+                        const label = c.charAt(0).toUpperCase() + c.slice(1);
+                        html += `<button class="filter-btn" onclick="filterGallery('${c}', this)">${label}</button>`;
+                    }
+                });
+                filterContainer.innerHTML = html;
+            }
+        }
+
+        function renderGallery(items) {
+            const grid = document.getElementById('galleryGrid');
+            if (!grid) return;
+
+            const filtered = activeGalleryCategory === 'all' 
+                ? items 
+                : items.filter(i => (i.category || '').toLowerCase() === activeGalleryCategory.toLowerCase());
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--clr-text-muted);">No images found in this category.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="gallery-item" data-category="${(item.category || 'craft').toLowerCase()}">
+                    <img src="${item.image_url || 'images/hero-bg.jpg'}" alt="${item.title || 'Jewellery'}" onerror="this.src='images/hero-bg.jpg'">
+                    <div class="gallery-caption">
+                        <span class="gallery-caption-tag">${item.category ? item.category.toUpperCase() : '22KT GOLD'}</span>
+                        <div class="gallery-caption-title">${item.title || 'Crafted Jewellery'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterGallery(category, btn) {
+            activeGalleryCategory = category;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            if (allGalleryItems.length > 0) {
+                renderGallery(allGalleryItems);
+            } else {
+                const items = document.querySelectorAll('.gallery-item');
+                items.forEach(item => {
+                    if (category === 'all' || item.getAttribute('data-category') === category) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initGallery);
     </script>
 </body>
 </html>
