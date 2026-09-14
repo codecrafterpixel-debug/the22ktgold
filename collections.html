@@ -217,8 +217,28 @@
 
     <script src="script.js"></script>
     <script>
+        const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000'))
+            ? 'http://localhost:3000'
+            : '';
+
         let allProducts = [];
         let selectedCat = 'all';
+
+        const defaultCategories = [
+            { id: 1, name: "Rings", slug: "rings", product_count: 3 },
+            { id: 2, name: "Necklaces", slug: "necklaces", product_count: 3 },
+            { id: 3, name: "Bangles", slug: "bangles", product_count: 2 },
+            { id: 4, name: "Earrings", slug: "earrings", product_count: 2 },
+            { id: 5, name: "Bridal Sets", slug: "bridal-sets", product_count: 2 }
+        ];
+
+        const defaultFallbackProducts = [
+            { id: 1, name: "22KT Royal Peacock Gold Necklace", category_name: "Necklaces", category_slug: "necklaces", weight: 34.5, purity: 22, current_price: 236325, making_charges: 1200, primary_image: "images/hero-bg.jpg", description: "Handcrafted 22KT temple gold necklace with royal peacock filigree work." },
+            { id: 2, name: "Antique 22KT Gold Bangle Set", category_name: "Bangles", category_slug: "bangles", weight: 48.0, purity: 22, current_price: 328800, making_charges: 1500, primary_image: "images/cat-bangles.jpg", description: "Traditional Gujarati antique gold bangles with intricate Nakshi carving." },
+            { id: 3, name: "Crafted 22KT Gold Cocktail Ring", category_name: "Rings", category_slug: "rings", weight: 12.4, purity: 22, current_price: 84940, making_charges: 600, primary_image: "images/product-1.jpg", description: "Bold statement floral ring forged in authentic 22KT hallmarked gold." },
+            { id: 4, name: "Luxury 22KT Temple Gold Earrings", category_name: "Earrings", category_slug: "earrings", weight: 18.2, purity: 22, current_price: 124670, making_charges: 800, primary_image: "images/cat-earrings.jpg", description: "Heritage chandelier earrings with delicate bell drops and ruby accents." },
+            { id: 5, name: "Heritage Imperial Bridal Choker Set", category_name: "Bridal Sets", category_slug: "bridal-sets", weight: 65.0, purity: 22, current_price: 445250, making_charges: 1800, primary_image: "images/cat-bridal.jpg", description: "Grand bridal masterpiece handcrafted by master artisans in Manek Chowk." }
+        ];
 
         const fmtPrice = n => (n === null || n === undefined || isNaN(Number(n)) || Number(n) <= 0) 
             ? 'Price on Request' 
@@ -226,37 +246,65 @@
 
         async function initCollectionsPage() {
             // 1. Load Categories
+            let cats = defaultCategories;
             try {
-                const catsRes = await fetch('/api/categories');
+                const catsRes = await fetch(API_BASE + '/api/categories');
                 if (catsRes.ok) {
-                    const cats = await catsRes.json();
-                    const filterWrap = document.getElementById('categoryFilterTabs');
-                    cats.forEach(c => {
-                        const btn = document.createElement('button');
-                        btn.className = 'filter-btn';
-                        btn.setAttribute('data-cat', c.slug || c.id);
-                        btn.textContent = `${c.name} (${c.product_count || 0})`;
-                        btn.onclick = () => selectCategory(c.slug || c.id, btn);
-                        filterWrap.appendChild(btn);
-                    });
+                    const fetchedCats = await catsRes.json();
+                    if (Array.isArray(fetchedCats) && fetchedCats.length > 0) {
+                        cats = fetchedCats;
+                    }
                 }
             } catch (err) {
-                console.warn('Categories load error:', err);
+                console.warn('Using default categories:', err);
+            }
+
+            const filterWrap = document.getElementById('categoryFilterTabs');
+            if (filterWrap) {
+                // Keep 'All' button and clear dynamic ones
+                const allBtn = filterWrap.querySelector('.filter-btn');
+                filterWrap.innerHTML = '';
+                if (allBtn) filterWrap.appendChild(allBtn);
+                else {
+                    const b = document.createElement('button');
+                    b.className = 'filter-btn active';
+                    b.setAttribute('data-cat', 'all');
+                    b.textContent = 'All Jewellery';
+                    b.onclick = () => selectCategory('all', b);
+                    filterWrap.appendChild(b);
+                }
+
+                cats.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    btn.setAttribute('data-cat', c.slug || c.id);
+                    btn.textContent = `${c.name}${c.product_count !== undefined ? ' (' + c.product_count + ')' : ''}`;
+                    btn.onclick = () => selectCategory(c.slug || c.id, btn);
+                    filterWrap.appendChild(btn);
+                });
             }
 
             // 2. Load Products
             try {
-                const res = await fetch('/api/products');
+                const res = await fetch(API_BASE + '/api/products');
                 if (res.ok) {
-                    allProducts = await res.json();
-                    renderProductGrid();
+                    const prods = await res.json();
+                    if (Array.isArray(prods) && prods.length > 0) {
+                        allProducts = prods;
+                    } else {
+                        const localProds = JSON.parse(localStorage.getItem('mockProductsList')) || [];
+                        allProducts = localProds.length ? localProds : defaultFallbackProducts;
+                    }
                 } else {
-                    throw new Error('Failed to load products');
+                    throw new Error('API non-200');
                 }
             } catch (err) {
-                console.error('Error fetching products:', err);
-                document.getElementById('dynamicProductsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:red;">Unable to load collections from server. Please refresh the page.</div>';
+                console.warn('API fetch fallback to local products:', err);
+                const localProds = JSON.parse(localStorage.getItem('mockProductsList')) || [];
+                allProducts = localProds.length ? localProds : defaultFallbackProducts;
             }
+
+            renderProductGrid();
         }
 
         function selectCategory(cat, btn) {
@@ -272,16 +320,25 @@
 
         function renderProductGrid() {
             const grid = document.getElementById('dynamicProductsGrid');
+            if (!grid) return;
             const searchVal = (document.getElementById('collectionSearchInput')?.value || '').toLowerCase().trim();
 
             const filtered = allProducts.filter(p => {
+                const pSlug = (p.category_slug || '').toLowerCase();
+                const pCatName = (p.category_name || '').toLowerCase();
+                const targetCat = String(selectedCat).toLowerCase();
+
                 const matchCat = (selectedCat === 'all') || 
-                                 (p.category_slug && p.category_slug === selectedCat) || 
-                                 (String(p.category_id) === String(selectedCat));
+                                 (pSlug === targetCat) || 
+                                 (pCatName === targetCat) ||
+                                 (String(p.category_id) === targetCat);
+
                 const matchSearch = !searchVal || 
                                     (p.title && p.title.toLowerCase().includes(searchVal)) || 
                                     (p.name && p.name.toLowerCase().includes(searchVal)) || 
-                                    (p.description && p.description.toLowerCase().includes(searchVal));
+                                    (p.description && p.description.toLowerCase().includes(searchVal)) ||
+                                    (p.category_name && p.category_name.toLowerCase().includes(searchVal));
+
                 return matchCat && matchSearch;
             });
 
@@ -295,14 +352,14 @@
                 const card = document.createElement('a');
                 card.href = 'product-detail.html?id=' + p.id;
                 card.className = 'product-card fade-up visible';
-                const prodTitle = p.title || p.name || '22KT Gold Creation';
-                const prodImg = p.image || p.primary_image || 'images/cat-rings.jpg';
+                const prodTitle = p.name || p.title || '22KT Gold Creation';
+                const prodImg = p.primary_image || p.image || 'images/cat-rings.jpg';
                 const prodPrice = p.current_price || p.base_price || 0;
 
                 card.innerHTML = `
                     <div class="product-image">
                         <span class="product-badge">${p.purity || 22}KT Gold</span>
-                        <img src="${prodImg}" alt="${prodTitle}" loading="lazy">
+                        <img src="${prodImg}" alt="${prodTitle}" loading="lazy" onerror="this.src='images/cat-rings.jpg'">
                     </div>
                     <div class="product-info">
                         <h3>${prodTitle}</h3>
