@@ -251,14 +251,41 @@
 
     <script src="script.js"></script>
     <script>
-        function submitContact() {
+        async function submitContact() {
             const name = document.getElementById('cnt_name').value.trim();
             const phone = document.getElementById('cnt_phone').value.trim();
             const city = document.getElementById('cnt_city').value.trim();
             const msg = document.getElementById('cnt_msg').value.trim();
 
+            if (!name || !phone || !msg) {
+                alert('Please enter your name, phone number, and message.');
+                return;
+            }
+
+            // 1. Post to dynamic backend
+            try {
+                await fetch('/api/enquiries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        city: city,
+                        subject: 'Website Contact Form Message',
+                        message: msg,
+                        source: 'Contact Page'
+                    })
+                });
+            } catch(e) {
+                console.warn('Enquiry logged to WhatsApp directly:', e);
+            }
+
+            // 2. Open WhatsApp for direct conversation
             const text = `Hi THE 22KT GOLD, I have an enquiry:\n\n*Name:* ${name}\n*Phone:* ${phone}\n*City:* ${city || 'Not specified'}\n*Message:* ${msg}`;
             window.open(`https://wa.me/919429616414?text=${encodeURIComponent(text)}`, '_blank');
+
+            // Reset form
+            document.getElementById('cnt_msg').value = '';
         }
     </script>
 </body>
